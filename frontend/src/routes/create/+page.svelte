@@ -1,18 +1,48 @@
 <script>
+	import { onMount } from 'svelte';
 	import { authStore } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
 	import { aiService } from '$lib/services/api';
 	import { db } from '$lib/services/firebase';
 	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+	import Modal from '$lib/components/Modal.svelte';
 
 	let prompt = '';
 	let generatedPoem = '';
+	let generatedTitle = '';
 	let loading = false;
 	let error = '';
 	let showSavePrompt = false;
 	let showSaveForm = false;
 	let poemTitle = '';
 	let saving = false;
+
+	// Modal state
+	let showModal = false;
+	let modalTitle = '';
+	let modalMessage = '';
+	let modalType = 'info';
+	let modalOnConfirm = null;
+
+	onMount(() => {
+		// Restore poem from localStorage if returning from login
+		const savedPoem = localStorage.getItem('pendingPoem');
+		const savedTitle = localStorage.getItem('pendingPoemTitle');
+		const savedPrompt = localStorage.getItem('pendingPrompt');
+
+		if (savedPoem && $authStore.user) {
+			generatedPoem = savedPoem;
+			generatedTitle = savedTitle || '';
+			poemTitle = savedTitle || '';
+			prompt = savedPrompt || '';
+			showSaveForm = true;
+
+			// Clear localStorage
+			localStorage.removeItem('pendingPoem');
+			localStorage.removeItem('pendingPoemTitle');
+			localStorage.removeItem('pendingPrompt');
+		}
+	});
 
 	async function handleGenerate() {
 		if (!prompt.trim()) {
@@ -23,11 +53,13 @@
 		loading = true;
 		error = '';
 		generatedPoem = '';
+		generatedTitle = '';
 
 		try {
 			const response = await aiService.generatePoem(prompt);
 			if (response.success) {
 				generatedPoem = response.data.poem;
+				generatedTitle = response.data.title || 'Untitled';
 			} else {
 				error = 'Failed to generate poem';
 			}
@@ -40,15 +72,22 @@
 
 	function copyToClipboard() {
 		navigator.clipboard.writeText(generatedPoem);
-		alert('Poem copied to clipboard!');
+		showModal = true;
+		modalType = 'success';
+		modalTitle = 'Copied!';
+		modalMessage = 'Poem copied to clipboard';
 	}
 
 	function handleSaveClick() {
 		if (!$authStore.user) {
+			// Save to localStorage before showing login prompt
+			localStorage.setItem('pendingPoem', generatedPoem);
+			localStorage.setItem('pendingPoemTitle', generatedTitle);
+			localStorage.setItem('pendingPrompt', prompt);
 			showSavePrompt = true;
 		} else {
 			showSaveForm = true;
-			poemTitle = prompt.slice(0, 50); // Default title from prompt
+			poemTitle = generatedTitle || prompt.slice(0, 50);
 		}
 	}
 
@@ -89,13 +128,18 @@
 				updatedAt: serverTimestamp()
 			});
 
-			// Success! Reset and redirect
-			alert('Poem saved successfully!');
-			goto('/create');
-			generatedPoem = '';
-			prompt = '';
-			poemTitle = '';
-			showSaveForm = false;
+			// Success modal
+			showModal = true;
+			modalType = 'success';
+			modalTitle = 'Success!';
+			modalMessage = 'Your poem has been saved successfully';
+			modalOnConfirm = () => {
+				generatedPoem = '';
+				generatedTitle = '';
+				prompt = '';
+				poemTitle = '';
+				showSaveForm = false;
+			};
 		} catch (err) {
 			console.error('Error saving poem:', err);
 			error = 'Failed to save poem. Please try again.';
@@ -108,6 +152,15 @@
 <svelte:head>
 	<title>Create Poem - Victorian Poems</title>
 </svelte:head>
+
+<Modal
+	bind:show={showModal}
+	title={modalTitle}
+	type={modalType}
+	onConfirm={modalOnConfirm}
+>
+	<p>{modalMessage}</p>
+</Modal>
 
 <div class="container mx-auto px-4 py-8">
 	<!-- Header -->
@@ -200,6 +253,12 @@
 							</div>
 						</div>
 					{:else if generatedPoem}
+						{#if generatedTitle}
+							<h3 class="text-2xl font-cormorant font-bold mb-4 text-center text-gold-700">
+								{generatedTitle}
+							</h3>
+						{/if}
+
 						<div class="bg-parchment-50 p-6 border-2 border-sepia-400 rounded-sm mb-4">
 							<div class="font-cormorant text-lg leading-relaxed whitespace-pre-wrap">
 								{generatedPoem}
@@ -222,7 +281,7 @@
 							<div class="mt-4 p-4 bg-gold-100 border-2 border-gold-500 rounded text-center">
 								<p class="text-ink-900 mb-3">
 									<strong>Sign in to save this poem!</strong><br/>
-									<span class="text-sm">Create an account to save and manage your poems</span>
+									<span class="text-sm">Your poem will be waiting for you after login</span>
 								</p>
 								<div class="flex gap-2 justify-center">
 									<a href="/auth/register" class="btn-victorian text-sm py-2 px-4">
@@ -252,6 +311,9 @@
 											required
 											disabled={saving}
 										/>
+										<p class="text-xs text-sepia-600 mt-1">
+											AI suggested: {generatedTitle}
+										</p>
 									</div>
 									<div class="flex gap-2">
 										<button

@@ -27,12 +27,13 @@ class AIController extends Controller
         ]);
 
         try {
-            $poem = $this->groqService->generatePoem($request->prompt);
+            $result = $this->groqService->generatePoem($request->prompt);
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'poem' => $poem,
+                    'title' => $result['title'],
+                    'poem' => $result['poem'],
                     'prompt' => $request->prompt
                 ],
                 'message' => 'Poem generated successfully'

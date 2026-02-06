@@ -3,11 +3,19 @@
 	import { authStore } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/services/firebase';
-	import { collection, query, where, orderBy, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+	import { collection, query, where, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+	import Modal from '$lib/components/Modal.svelte';
 
 	let poems = [];
 	let loading = true;
 	let error = '';
+
+	// Modal state
+	let showModal = false;
+	let modalTitle = '';
+	let modalMessage = '';
+	let modalType = 'info';
+	let modalOnConfirm = null;
 
 	onMount(() => {
 		if (!$authStore.user) {
@@ -25,8 +33,7 @@
 			const user = $authStore.user;
 			const q = query(
 				collection(db, 'poems'),
-				where('authorId', '==', user.uid),
-				orderBy('createdAt', 'desc')
+				where('authorId', '==', user.uid)
 			);
 
 			const querySnapshot = await getDocs(q);
@@ -34,9 +41,16 @@
 				id: doc.id,
 				...doc.data()
 			}));
+
+			// Sort by createdAt in JavaScript (to avoid Firestore composite index requirement)
+			poems.sort((a, b) => {
+				const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+				const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+				return bTime - aTime;
+			});
 		} catch (err) {
 			console.error('Error loading poems:', err);
-			error = 'Failed to load poems. Please try again.';
+			error = `Failed to load poems: ${err.message}`;
 		} finally {
 			loading = false;
 		}
@@ -51,24 +65,45 @@
 			poems = poems.map(p =>
 				p.id === poemId ? { ...p, isPublic: !currentStatus } : p
 			);
+
+			// Success notification
+			showModal = true;
+			modalType = 'success';
+			modalTitle = 'Updated';
+			modalMessage = `Poem is now ${!currentStatus ? 'public' : 'private'}`;
 		} catch (err) {
 			console.error('Error updating poem:', err);
-			alert('Failed to update poem visibility');
+			showModal = true;
+			modalType = 'error';
+			modalTitle = 'Error';
+			modalMessage = 'Failed to update poem visibility';
 		}
 	}
 
-	async function deletePoem(poemId, title) {
-		if (!confirm(`Are you sure you want to delete "${title}"?`)) {
-			return;
-		}
+	function confirmDelete(poemId, title) {
+		showModal = true;
+		modalType = 'confirm';
+		modalTitle = 'Delete Poem';
+		modalMessage = `Are you sure you want to delete "${title}"? This action cannot be undone.`;
+		modalOnConfirm = () => deletePoem(poemId, title);
+	}
 
+	async function deletePoem(poemId, title) {
 		try {
 			await deleteDoc(doc(db, 'poems', poemId));
 			poems = poems.filter(p => p.id !== poemId);
-			alert('Poem deleted successfully');
+
+			// Success notification
+			showModal = true;
+			modalType = 'success';
+			modalTitle = 'Deleted';
+			modalMessage = 'Poem deleted successfully';
 		} catch (err) {
 			console.error('Error deleting poem:', err);
-			alert('Failed to delete poem');
+			showModal = true;
+			modalType = 'error';
+			modalTitle = 'Error';
+			modalMessage = 'Failed to delete poem';
 		}
 	}
 
@@ -91,6 +126,15 @@
 <svelte:head>
 	<title>My Poems - Victorian Poems</title>
 </svelte:head>
+
+<Modal
+	bind:show={showModal}
+	title={modalTitle}
+	type={modalType}
+	onConfirm={modalOnConfirm}
+>
+	<p>{modalMessage}</p>
+</Modal>
 
 <div class="container mx-auto px-4 py-8">
 	<div class="mb-8">
@@ -177,7 +221,7 @@
 								{poem.isPublic ? 'Make Private' : 'Make Public'}
 							</button>
 							<button
-								on:click={() => deletePoem(poem.id, poem.title)}
+								on:click={() => confirmDelete(poem.id, poem.title)}
 								class="bg-burgundy-500 hover:bg-burgundy-600 text-parchment-50 border-2 border-burgundy-700 px-4 py-2 rounded transition-all flex-1 text-sm"
 							>
 								Delete

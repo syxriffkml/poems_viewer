@@ -23,7 +23,7 @@ class GroqService
     /**
      * Generate a poem based on a user prompt
      */
-    public function generatePoem(string $prompt): string
+    public function generatePoem(string $prompt): array
     {
         try {
             $response = Http::withoutVerifying()->withHeaders([
@@ -34,7 +34,12 @@ class GroqService
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are a skilled poet with expertise in various poetic forms and styles. Generate beautiful, creative poems based on user prompts. Format with proper line breaks and stanzas. Be creative and evocative in your language.'
+                        'content' => 'You are a skilled poet with expertise in various poetic forms and styles. Generate beautiful, creative poems based on user prompts. IMPORTANT: Your response must be in this exact format:
+TITLE: [A short, evocative title for the poem]
+---
+[The poem content with proper line breaks and stanzas]
+
+Be creative and evocative in your language. The title should be 2-6 words that capture the essence of the poem.'
                     ],
                     [
                         'role' => 'user',
@@ -51,7 +56,24 @@ class GroqService
             }
 
             $data = $response->json();
-            return $data['choices'][0]['message']['content'] ?? '';
+            $content = $data['choices'][0]['message']['content'] ?? '';
+
+            // Parse title and poem
+            $title = '';
+            $poem = $content;
+
+            if (preg_match('/TITLE:\s*(.+?)\s*---\s*(.+)/s', $content, $matches)) {
+                $title = trim($matches[1]);
+                $poem = trim($matches[2]);
+            } elseif (preg_match('/TITLE:\s*(.+?)\n\n(.+)/s', $content, $matches)) {
+                $title = trim($matches[1]);
+                $poem = trim($matches[2]);
+            }
+
+            return [
+                'title' => $title ?: 'Untitled',
+                'poem' => $poem
+            ];
 
         } catch (Exception $e) {
             Log::error('Groq service error', ['error' => $e->getMessage()]);
