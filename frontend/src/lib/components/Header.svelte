@@ -23,6 +23,11 @@
 			<a href="/create" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors">
 				Create
 			</a>
+			{#if $authStore.user}
+				<a href="/poems" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors">
+					My Poems
+				</a>
+			{/if}
 			<a href="/gallery" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors">
 				Gallery
 			</a>
