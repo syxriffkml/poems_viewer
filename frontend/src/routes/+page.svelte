@@ -1,5 +1,4 @@
 <script>
-	import { authStore } from '$lib/stores/auth';
 </script>
 
 <svelte:head>
@@ -20,22 +19,16 @@
 			Create exquisite poetry with the assistance of artificial intelligence, or craft your own masterpieces with elegant Victorian styling. Share your verses with fellow poets in our distinguished gallery.
 		</p>
 		<div class="flex gap-4 justify-center flex-wrap">
-			{#if $authStore.user}
-				<a href="/create" class="btn-victorian">
-					Begin Creating
-				</a>
-				<a href="/gallery" class="btn-victorian-secondary">
-					Explore Gallery
-				</a>
-			{:else}
-				<a href="/auth/register" class="btn-victorian">
-					Get Started
-				</a>
-				<a href="/auth/login" class="btn-victorian-secondary">
-					Sign In
-				</a>
-			{/if}
+			<a href="/create" class="btn-victorian">
+				Begin Creating
+			</a>
+			<a href="/gallery" class="btn-victorian-secondary">
+				Explore Gallery
+			</a>
 		</div>
+		<p class="text-sm text-sepia-600 mt-4">
+			No login required to generate poems • Sign in to save and edit
+		</p>
 	</div>
 
 	<!-- Divider -->

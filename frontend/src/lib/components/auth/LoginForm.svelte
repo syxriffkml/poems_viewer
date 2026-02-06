@@ -1,12 +1,24 @@
 <script>
-	import { auth } from '$lib/services/firebase';
+	import { auth, db } from '$lib/services/firebase';
 	import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+	import { doc, setDoc } from 'firebase/firestore';
 	import { goto } from '$app/navigation';
 
 	let email = '';
 	let password = '';
 	let error = '';
 	let loading = false;
+
+	async function createUserDocument(user) {
+		await setDoc(doc(db, 'users', user.uid), {
+			uid: user.uid,
+			email: user.email,
+			displayName: user.displayName || user.email.split('@')[0],
+			username: user.email.split('@')[0],
+			createdAt: new Date(),
+			updatedAt: new Date()
+		}, { merge: true });
+	}
 
 	async function handleEmailLogin() {
 		if (!email || !password) {
@@ -39,7 +51,8 @@
 
 		try {
 			const provider = new GoogleAuthProvider();
-			await signInWithPopup(auth, provider);
+			const result = await signInWithPopup(auth, provider);
+			await createUserDocument(result.user);
 			goto('/create');
 		} catch (err) {
 			if (err.code !== 'auth/popup-closed-by-user') {

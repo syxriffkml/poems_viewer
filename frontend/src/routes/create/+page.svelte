@@ -1,27 +1,18 @@
 <script>
-	import { onMount } from 'svelte';
 	import { authStore } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
 	import { aiService } from '$lib/services/api';
-	import { auth } from '$lib/services/firebase';
-	import { signOut } from 'firebase/auth';
+	import { db } from '$lib/services/firebase';
+	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 	let prompt = '';
 	let generatedPoem = '';
 	let loading = false;
 	let error = '';
-	let $authStore;
-
-	authStore.subscribe(value => {
-		$authStore = value;
-	});
-
-	onMount(() => {
-		// Redirect to login if not authenticated
-		if (!$authStore.loading && !$authStore.user) {
-			goto('/auth/login');
-		}
-	});
+	let showSavePrompt = false;
+	let showSaveForm = false;
+	let poemTitle = '';
+	let saving = false;
 
 	async function handleGenerate() {
 		if (!prompt.trim()) {
@@ -47,14 +38,70 @@
 		}
 	}
 
-	async function handleLogout() {
-		await signOut(auth);
-		goto('/');
-	}
-
 	function copyToClipboard() {
 		navigator.clipboard.writeText(generatedPoem);
 		alert('Poem copied to clipboard!');
+	}
+
+	function handleSaveClick() {
+		if (!$authStore.user) {
+			showSavePrompt = true;
+		} else {
+			showSaveForm = true;
+			poemTitle = prompt.slice(0, 50); // Default title from prompt
+		}
+	}
+
+	async function handleSavePoem() {
+		if (!poemTitle.trim()) {
+			error = 'Please enter a title for your poem';
+			return;
+		}
+
+		saving = true;
+		error = '';
+
+		try {
+			const user = $authStore.user;
+			const shareId = crypto.randomUUID();
+
+			await addDoc(collection(db, 'poems'), {
+				authorId: user.uid,
+				authorUsername: user.displayName || user.email.split('@')[0],
+				title: poemTitle.trim(),
+				content: generatedPoem,
+				isAIGenerated: true,
+				aiPrompt: prompt,
+				isPublic: false,
+				shareId: shareId,
+				formatting: {
+					fontFamily: 'Crimson Text',
+					fontSize: 16,
+					color: '#1f1e1a',
+					alignment: 'left',
+					lineSpacing: 1.6
+				},
+				categories: [],
+				tags: [],
+				sentiment: '',
+				views: 0,
+				createdAt: serverTimestamp(),
+				updatedAt: serverTimestamp()
+			});
+
+			// Success! Reset and redirect
+			alert('Poem saved successfully!');
+			goto('/create');
+			generatedPoem = '';
+			prompt = '';
+			poemTitle = '';
+			showSaveForm = false;
+		} catch (err) {
+			console.error('Error saving poem:', err);
+			error = 'Failed to save poem. Please try again.';
+		} finally {
+			saving = false;
+		}
 	}
 </script>
 
@@ -62,22 +109,12 @@
 	<title>Create Poem - Victorian Poems</title>
 </svelte:head>
 
-{#if $authStore.loading}
-	<div class="min-h-screen flex items-center justify-center">
-		<div class="text-2xl text-gold-600">Loading...</div>
+<div class="container mx-auto px-4 py-8">
+	<!-- Header -->
+	<div class="mb-8">
+		<h1 class="text-4xl font-bold">Create a Poem</h1>
+		<p class="text-sepia-700">Generate beautiful poems with AI • Free, no login required</p>
 	</div>
-{:else if $authStore.user}
-	<div class="container mx-auto px-4 py-8">
-		<!-- Header with user info -->
-		<div class="flex justify-between items-center mb-8">
-			<div>
-				<h1 class="text-4xl font-bold">Create a Poem</h1>
-				<p class="text-sepia-700">Welcome, {$authStore.user.displayName || $authStore.user.email}</p>
-			</div>
-			<button on:click={handleLogout} class="btn-victorian-secondary">
-				Sign Out
-			</button>
-		</div>
 
 		<div class="grid md:grid-cols-2 gap-8">
 			<!-- Input Section -->
@@ -176,10 +213,66 @@
 							>
 								Copy
 							</button>
-							<button class="btn-victorian flex-1">
+							<button on:click={handleSaveClick} class="btn-victorian flex-1">
 								Save Poem
 							</button>
 						</div>
+
+						{#if showSavePrompt}
+							<div class="mt-4 p-4 bg-gold-100 border-2 border-gold-500 rounded text-center">
+								<p class="text-ink-900 mb-3">
+									<strong>Sign in to save this poem!</strong><br/>
+									<span class="text-sm">Create an account to save and manage your poems</span>
+								</p>
+								<div class="flex gap-2 justify-center">
+									<a href="/auth/register" class="btn-victorian text-sm py-2 px-4">
+										Register
+									</a>
+									<a href="/auth/login" class="btn-victorian-secondary text-sm py-2 px-4">
+										Sign In
+									</a>
+								</div>
+							</div>
+						{/if}
+
+						{#if showSaveForm}
+							<div class="mt-4 p-4 bg-parchment-200 border-2 border-sepia-400 rounded">
+								<h3 class="text-lg font-bold mb-3">Save Your Poem</h3>
+								<form on:submit|preventDefault={handleSavePoem} class="space-y-3">
+									<div>
+										<label for="poemTitle" class="block text-sm font-semibold mb-2">
+											Poem Title
+										</label>
+										<input
+											type="text"
+											id="poemTitle"
+											bind:value={poemTitle}
+											class="input-victorian"
+											placeholder="Enter a title for your poem"
+											required
+											disabled={saving}
+										/>
+									</div>
+									<div class="flex gap-2">
+										<button
+											type="submit"
+											class="btn-victorian flex-1"
+											disabled={saving}
+										>
+											{saving ? 'Saving...' : 'Save'}
+										</button>
+										<button
+											type="button"
+											on:click={() => showSaveForm = false}
+											class="btn-victorian-secondary flex-1"
+											disabled={saving}
+										>
+											Cancel
+										</button>
+									</div>
+								</form>
+							</div>
+						{/if}
 					{:else}
 						<div class="flex items-center justify-center h-64 text-center">
 							<div>
@@ -213,4 +306,3 @@
 			</ul>
 		</div>
 	</div>
-{/if}

@@ -19,7 +19,7 @@
 			username: user.email.split('@')[0],
 			createdAt: new Date(),
 			updatedAt: new Date()
-		});
+		}, { merge: true });
 	}
 
 	async function handleEmailRegister() {
