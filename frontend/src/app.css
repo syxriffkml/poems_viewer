@@ -11,7 +11,7 @@
 
 @layer base {
   body {
-    @apply bg-parchment-100 text-ink-800 font-crimson;
+    @apply bg-parchment-100 text-ink-800 font-crimson overflow-x-hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -102,13 +102,13 @@
 
   /* Divider with flourish */
   .divider-flourish {
-    @apply relative my-8 text-center;
+    @apply relative my-8 text-center overflow-hidden;
   }
 
   .divider-flourish::before,
   .divider-flourish::after {
     content: '';
-    @apply absolute top-1/2 w-full h-px bg-gradient-to-r from-transparent via-sepia-400 to-transparent;
+    @apply absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-sepia-400 to-transparent;
   }
 
   .divider-flourish span {
