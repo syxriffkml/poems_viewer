@@ -6,6 +6,7 @@
 	import { db } from '$lib/services/firebase';
 	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 	import Modal from '$lib/components/Modal.svelte';
+	import { Sparkles, Loader2, Copy, Save, Feather } from 'lucide-svelte';
 
 	let prompt = '';
 	let generatedPoem = '';
@@ -150,7 +151,10 @@
 <div class="container mx-auto px-4 py-8">
 	<!-- Header -->
 	<div class="mb-8">
-		<h1 class="text-4xl font-bold">Create a Poem</h1>
+		<div class="flex items-center gap-3 mb-2">
+			<Feather size={36} class="text-gold-600" />
+			<h1 class="text-4xl font-bold">Create a Poem</h1>
+		</div>
 		<p class="text-sepia-700">Generate beautiful poems with AI • Free, no login required</p>
 	</div>
 
@@ -158,7 +162,10 @@
 			<!-- Input Section -->
 			<div>
 				<div class="card-victorian">
-					<h2 class="text-2xl font-bold mb-4">🪶 AI Poem Generator</h2>
+					<div class="flex items-center gap-2 mb-4">
+						<Sparkles size={24} class="text-gold-600" />
+						<h2 class="text-2xl font-bold">AI Poem Generator</h2>
+					</div>
 
 					{#if error}
 						<div class="bg-burgundy-500 text-parchment-50 p-3 rounded mb-4">
@@ -185,10 +192,16 @@
 
 						<button
 							type="submit"
-							class="btn-victorian w-full"
+							class="btn-victorian w-full flex items-center justify-center gap-2"
 							disabled={loading}
 						>
-							{loading ? 'Generating...' : 'Generate Poem'}
+							{#if loading}
+								<Loader2 size={18} class="animate-spin" />
+								<span>Generating...</span>
+							{:else}
+								<Sparkles size={18} />
+								<span>Generate Poem</span>
+							{/if}
 						</button>
 					</form>
 
@@ -228,13 +241,16 @@
 			<!-- Output Section -->
 			<div>
 				<div class="card-victorian min-h-[400px]">
-					<h2 class="text-2xl font-bold mb-4">📜 Generated Poem</h2>
+					<div class="flex items-center gap-2 mb-4">
+						<Feather size={24} class="text-gold-600" />
+						<h2 class="text-2xl font-bold">Generated Poem</h2>
+					</div>
 
 					{#if loading}
 						<div class="flex items-center justify-center h-64">
 							<div class="text-center">
-								<div class="text-6xl mb-4">🪶</div>
-								<p class="text-xl text-gold-600 animate-pulse">Crafting your poem...</p>
+								<Feather size={64} class="text-gold-600 mx-auto mb-4 animate-pulse" />
+								<p class="text-xl text-gold-600">Crafting your poem...</p>
 							</div>
 						</div>
 					{:else if generatedPoem}
@@ -253,12 +269,19 @@
 						<div class="flex gap-2">
 							<button
 								on:click={copyToClipboard}
-								class="btn-victorian-secondary flex-1"
+								class="btn-victorian-secondary flex-1 flex items-center justify-center gap-2"
 							>
-								Copy
+								<Copy size={18} />
+								<span>Copy</span>
 							</button>
-							<button on:click={handleSaveClick} class="btn-victorian flex-1" disabled={saving}>
-								{saving ? 'Saving...' : 'Save Poem'}
+							<button on:click={handleSaveClick} class="btn-victorian flex-1 flex items-center justify-center gap-2" disabled={saving}>
+								{#if saving}
+									<Loader2 size={18} class="animate-spin" />
+									<span>Saving...</span>
+								{:else}
+									<Save size={18} />
+									<span>Save Poem</span>
+								{/if}
 							</button>
 						</div>
 
@@ -281,7 +304,7 @@
 					{:else}
 						<div class="flex items-center justify-center h-64 text-center">
 							<div>
-								<div class="text-6xl mb-4">✒️</div>
+								<Feather size={64} class="text-sepia-400 mx-auto mb-4" />
 								<p class="text-lg text-sepia-600">
 									Enter a prompt and generate your first poem
 								</p>
@@ -294,7 +317,10 @@
 
 		<!-- Tips Section -->
 		<div class="mt-8 card-victorian">
-			<h3 class="text-xl font-bold mb-3">✨ Tips for Better Poems</h3>
+			<div class="flex items-center gap-2 mb-3">
+				<Sparkles size={20} class="text-gold-600" />
+				<h3 class="text-xl font-bold">Tips for Better Poems</h3>
+			</div>
 			<ul class="grid md:grid-cols-3 gap-4 text-sm">
 				<li class="flex gap-2">
 					<span class="text-gold-600">•</span>

@@ -3,6 +3,7 @@
 	import { auth } from '$lib/services/firebase';
 	import { signOut } from 'firebase/auth';
 	import { goto } from '$app/navigation';
+	import { Sparkles, BookMarked, Image, Feather } from 'lucide-svelte';
 
 	async function handleLogout() {
 		await signOut(auth);
@@ -14,22 +15,25 @@
 	<div class="container mx-auto px-4 py-4 flex justify-between items-center">
 		<!-- Logo -->
 		<a href="/" class="flex items-center gap-2">
-			<span class="text-3xl">🪶</span>
+			<Feather size={32} class="text-gold-600" />
 			<span class="text-2xl font-playfair font-bold text-ink-900">Victorian Poems</span>
 		</a>
 
 		<!-- Navigation Links -->
 		<nav class="hidden md:flex gap-6 items-center">
-			<a href="/create" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors">
-				Create
+			<a href="/create" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors flex items-center gap-2">
+				<Sparkles size={18} />
+				<span>Create</span>
 			</a>
 			{#if $authStore.user}
-				<a href="/poems" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors">
-					My Poems
+				<a href="/poems" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors flex items-center gap-2">
+					<BookMarked size={18} />
+					<span>My Poems</span>
 				</a>
 			{/if}
-			<a href="/gallery" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors">
-				Gallery
+			<a href="/gallery" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors flex items-center gap-2">
+				<Image size={18} />
+				<span>Gallery</span>
 			</a>
 		</nav>
 
