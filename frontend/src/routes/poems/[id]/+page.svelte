@@ -5,10 +5,17 @@
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/services/firebase';
 	import { doc, getDoc } from 'firebase/firestore';
+	import Modal from '$lib/components/Modal.svelte';
 
 	let poem = null;
 	let loading = true;
 	let error = '';
+
+	// Modal state
+	let showModal = false;
+	let modalTitle = '';
+	let modalMessage = '';
+	let modalType = 'info';
 
 	onMount(() => {
 		loadPoem();
@@ -56,13 +63,20 @@
 
 	function copyToClipboard() {
 		navigator.clipboard.writeText(poem.content);
-		alert('Poem copied to clipboard!');
+		showModal = true;
+		modalType = 'success';
+		modalTitle = 'Copied!';
+		modalMessage = 'Poem copied to clipboard';
 	}
 </script>
 
 <svelte:head>
 	<title>{poem?.title || 'View Poem'} - Victorian Poems</title>
 </svelte:head>
+
+<Modal bind:show={showModal} title={modalTitle} type={modalType}>
+	<p>{modalMessage}</p>
+</Modal>
 
 <div class="container mx-auto px-4 py-8 max-w-4xl">
 	{#if loading}
