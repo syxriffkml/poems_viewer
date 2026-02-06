@@ -62,10 +62,21 @@ Be creative and evocative in your language. The title should be 2-6 words that c
             $title = '';
             $poem = $content;
 
+            // Try multiple parsing patterns
             if (preg_match('/TITLE:\s*(.+?)\s*---\s*(.+)/s', $content, $matches)) {
+                // Format: TITLE: [title]\n---\n[poem]
                 $title = trim($matches[1]);
                 $poem = trim($matches[2]);
+            } elseif (preg_match('/^(.+?)\s*---\s*(.+)/s', $content, $matches)) {
+                // Format: [title]\n---\n[poem] (no TITLE: prefix)
+                $potentialTitle = trim($matches[1]);
+                // Only treat as title if it's short (less than 100 chars) and doesn't contain newlines
+                if (strlen($potentialTitle) < 100 && strpos($potentialTitle, "\n") === false) {
+                    $title = $potentialTitle;
+                    $poem = trim($matches[2]);
+                }
             } elseif (preg_match('/TITLE:\s*(.+?)\n\n(.+)/s', $content, $matches)) {
+                // Format: TITLE: [title]\n\n[poem]
                 $title = trim($matches[1]);
                 $poem = trim($matches[2]);
             }
