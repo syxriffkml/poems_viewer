@@ -13,8 +13,6 @@
 	let loading = false;
 	let error = '';
 	let showSavePrompt = false;
-	let showSaveForm = false;
-	let poemTitle = '';
 	let saving = false;
 
 	// Modal state
@@ -33,14 +31,15 @@
 		if (savedPoem && $authStore.user) {
 			generatedPoem = savedPoem;
 			generatedTitle = savedTitle || '';
-			poemTitle = savedTitle || '';
 			prompt = savedPrompt || '';
-			showSaveForm = true;
 
 			// Clear localStorage
 			localStorage.removeItem('pendingPoem');
 			localStorage.removeItem('pendingPoemTitle');
 			localStorage.removeItem('pendingPrompt');
+
+			// Auto-save the poem
+			handleSaveClick();
 		}
 	});
 
@@ -78,36 +77,29 @@
 		modalMessage = 'Poem copied to clipboard';
 	}
 
-	function handleSaveClick() {
+	async function handleSaveClick() {
 		if (!$authStore.user) {
 			// Save to localStorage before showing login prompt
 			localStorage.setItem('pendingPoem', generatedPoem);
 			localStorage.setItem('pendingPoemTitle', generatedTitle);
 			localStorage.setItem('pendingPrompt', prompt);
 			showSavePrompt = true;
-		} else {
-			showSaveForm = true;
-			poemTitle = generatedTitle || prompt.slice(0, 50);
-		}
-	}
-
-	async function handleSavePoem() {
-		if (!poemTitle.trim()) {
-			error = 'Please enter a title for your poem';
 			return;
 		}
 
+		// Auto-save with AI-generated title
 		saving = true;
 		error = '';
 
 		try {
 			const user = $authStore.user;
 			const shareId = crypto.randomUUID();
+			const title = generatedTitle || prompt.slice(0, 50) || 'Untitled';
 
-			await addDoc(collection(db, 'poems'), {
+			const docRef = await addDoc(collection(db, 'poems'), {
 				authorId: user.uid,
 				authorUsername: user.displayName || user.email.split('@')[0],
-				title: poemTitle.trim(),
+				title: title,
 				content: generatedPoem,
 				isAIGenerated: true,
 				aiPrompt: prompt,
@@ -128,21 +120,14 @@
 				updatedAt: serverTimestamp()
 			});
 
-			// Success modal
-			showModal = true;
-			modalType = 'success';
-			modalTitle = 'Success!';
-			modalMessage = 'Your poem has been saved successfully';
-			modalOnConfirm = () => {
-				generatedPoem = '';
-				generatedTitle = '';
-				prompt = '';
-				poemTitle = '';
-				showSaveForm = false;
-			};
+			// Redirect to poem view page
+			goto(`/poems/${docRef.id}`);
 		} catch (err) {
 			console.error('Error saving poem:', err);
-			error = 'Failed to save poem. Please try again.';
+			showModal = true;
+			modalType = 'error';
+			modalTitle = 'Error';
+			modalMessage = 'Failed to save poem. Please try again.';
 		} finally {
 			saving = false;
 		}
@@ -272,8 +257,8 @@
 							>
 								Copy
 							</button>
-							<button on:click={handleSaveClick} class="btn-victorian flex-1">
-								Save Poem
+							<button on:click={handleSaveClick} class="btn-victorian flex-1" disabled={saving}>
+								{saving ? 'Saving...' : 'Save Poem'}
 							</button>
 						</div>
 
@@ -291,48 +276,6 @@
 										Sign In
 									</a>
 								</div>
-							</div>
-						{/if}
-
-						{#if showSaveForm}
-							<div class="mt-4 p-4 bg-parchment-200 border-2 border-sepia-400 rounded">
-								<h3 class="text-lg font-bold mb-3">Save Your Poem</h3>
-								<form on:submit|preventDefault={handleSavePoem} class="space-y-3">
-									<div>
-										<label for="poemTitle" class="block text-sm font-semibold mb-2">
-											Poem Title
-										</label>
-										<input
-											type="text"
-											id="poemTitle"
-											bind:value={poemTitle}
-											class="input-victorian"
-											placeholder="Enter a title for your poem"
-											required
-											disabled={saving}
-										/>
-										<p class="text-xs text-sepia-600 mt-1">
-											AI suggested: {generatedTitle}
-										</p>
-									</div>
-									<div class="flex gap-2">
-										<button
-											type="submit"
-											class="btn-victorian flex-1"
-											disabled={saving}
-										>
-											{saving ? 'Saving...' : 'Save'}
-										</button>
-										<button
-											type="button"
-											on:click={() => showSaveForm = false}
-											class="btn-victorian-secondary flex-1"
-											disabled={saving}
-										>
-											Cancel
-										</button>
-									</div>
-								</form>
 							</div>
 						{/if}
 					{:else}
