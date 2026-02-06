@@ -26,11 +26,11 @@ class GroqService
     public function generatePoem(string $prompt): string
     {
         try {
-            $response = Http::withHeaders([
+            $response = Http::withoutVerifying()->withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->timeout(30)->post($this->baseUrl . '/chat/completions', [
-                'model' => 'llama-3.1-70b-versatile',
+                'model' => 'llama-3.3-70b-versatile',
                 'messages' => [
                     [
                         'role' => 'system',
@@ -65,11 +65,11 @@ class GroqService
     public function categorizePoem(string $poemContent): array
     {
         try {
-            $response = Http::withHeaders([
+            $response = Http::withoutVerifying()->withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->timeout(20)->post($this->baseUrl . '/chat/completions', [
-                'model' => 'llama-3.1-8b-instant',
+                'model' => 'llama-3.3-70b-versatile',
                 'messages' => [
                     [
                         'role' => 'system',
@@ -122,11 +122,11 @@ class GroqService
     public function generateTags(string $poemContent): array
     {
         try {
-            $response = Http::withHeaders([
+            $response = Http::withoutVerifying()->withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->timeout(15)->post($this->baseUrl . '/chat/completions', [
-                'model' => 'llama-3.1-8b-instant',
+                'model' => 'llama-3.3-70b-versatile',
                 'messages' => [
                     [
                         'role' => 'system',
