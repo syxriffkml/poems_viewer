@@ -178,6 +178,8 @@ poems_viewer/
 │   │   │   │   └── [id]/edit/+page.svelte (Edit poem) ✅
 │   │   │   ├── share/
 │   │   │   │   └── [shareId]/+page.svelte (Share poem via URL) ✅
+│   │   │   ├── profile/
+│   │   │   │   └── [uid]/+page.svelte     (User profile) ✅
 │   │   │   └── auth/
 │   │   │       ├── login/+page.svelte
 │   │   │       └── register/+page.svelte
@@ -265,10 +267,20 @@ KNOWN CONSTRAINTS
     - Empty state with "No poems found" message
     - Client-side filtering (reactive via Svelte $:)
 
+11. USER PROFILE PAGES (/profile/[uid])
+    - Shows author name with avatar placeholder (User icon in gold circle)
+    - Stats: public poems count, AI generated count
+    - Grid of all public poems by that author
+    - Clickable author names in gallery, share page, and poem view page
+    - Scroll up/down buttons
+
+12. ADVANCED GALLERY SORTING
+    - Sort options in filter panel: Newest First, Oldest First
+    - Sort applied reactively alongside category/sentiment/search filters
+    - 3-column filter layout (Category, Sentiment, Sort By)
+
 POTENTIAL NEXT FEATURES (NOT STARTED)
 -------------------------------------
-- User profile pages (/users/[username])
-- Advanced gallery filters (date range, sort by views/date)
 - Export poems as PDF or images
 - More AI customization (style, length, rhyme scheme)
 - Poem versioning/history
