@@ -5,7 +5,7 @@
 	import { db } from '$lib/services/firebase';
 	import { collection, query, where, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 	import Modal from '$lib/components/Modal.svelte';
-	import { Eye, Edit, Globe, Lock, Trash2, Sparkles, ArrowUp, ArrowDown, BookMarked, BarChart3 } from 'lucide-svelte';
+	import { Eye, Edit, Globe, Lock, Trash2, Sparkles, ArrowUp, ArrowDown, BookMarked } from 'lucide-svelte';
 
 	let poems = [];
 	let loading = true;
@@ -189,10 +189,6 @@
 	{:else}
 		<!-- Stats (Moved to Top) -->
 		<div class="mb-8 card-victorian">
-			<div class="flex items-center gap-2 mb-4">
-				<BarChart3 size={24} class="text-gold-600" />
-				<h2 class="text-xl font-bold">Statistics</h2>
-			</div>
 			<div class="grid grid-cols-3 gap-4 text-center">
 				<div>
 					<div class="text-3xl font-bold text-gold-600">{poems.length}</div>

@@ -1,0 +1,268 @@
+===========================================
+VICTORIAN POEMS WEB APPLICATION - PROJECT STATUS
+===========================================
+
+PROJECT OVERVIEW
+-----------------
+Full-stack Victorian-themed poetry web app with AI-powered poem generation.
+Users can generate poems (no login required), save them, manage collections, and browse a public gallery.
+
+TECH STACK
+----------
+Frontend:
+- SvelteKit 2 with Svelte 4
+- Tailwind CSS (custom Victorian theme: sepia, gold, parchment colors)
+- Firebase Firestore (database) + Firebase Auth (authentication)
+- Lucide Svelte for icons (NO EMOJIS - all replaced with proper icons)
+- Fonts: Playfair Display, Cormorant Garamond, Crimson Text, Old Standard TT
+
+Backend:
+- Laravel 12 (PHP)
+- Groq AI API (llama-3.3-70b-versatile model) for poem generation
+- CORS enabled for SvelteKit frontend
+
+HOW TO RUN
+----------
+Frontend:
+  cd frontend
+  npm install
+  npm run dev
+  → Runs on http://localhost:5173
+
+Backend:
+  cd backend
+  php artisan serve
+  → Runs on http://127.0.0.1:8000
+
+Environment:
+  - frontend/.env.local → Firebase config
+  - backend/.env → GROQ_API_KEY
+
+COMPLETED FEATURES ✅
+--------------------
+
+1. HOME PAGE (/)
+   - Victorian landing page with welcome message
+
+2. AUTHENTICATION (/auth/login, /auth/register)
+   - Firebase Auth: email/password + Google sign-in
+   - Auth state managed via Svelte store
+
+3. AI POEM GENERATOR (/create)
+   - NO login required to generate poems
+   - AI generates BOTH title AND poem content
+   - Title parsing handles multiple AI formats (with/without "TITLE:" prefix)
+   - localStorage persistence: saves poem if user needs to login
+   - Auto-saves poem after login and redirects to view page
+   - Icons: Sparkles, Feather, Copy, Save, Loader2 (spinning)
+
+4. MY POEMS PAGE (/poems)
+   - Stats at TOP (Total Poems, Public, AI Generated) - NO "Statistics" header
+   - Grid layout with Victorian-styled poem cards
+   - Actions: View, Edit, Make Public/Private, Delete
+   - All feedback via Modal component (NO JavaScript alerts)
+   - Scroll-to-top and scroll-to-bottom buttons (appear when scrolling)
+   - Icons: Eye, Edit, Globe, Lock, Trash2, Sparkles, ArrowUp, ArrowDown, BookMarked
+
+5. GALLERY PAGE (/gallery)
+   - Browse all public poems (no login required)
+   - Search bar ALWAYS visible with search icon
+   - Collapsible filters (click "Filters" button to show/hide):
+     * Category filter
+     * Sentiment filter
+     * Shows active filter count badge on button
+   - Results count display
+   - Scroll buttons (up/down) when user scrolls
+   - Icons: Search, SlidersHorizontal, Tag, Heart, Eye, User, Calendar, Scroll, Sparkles
+
+6. HEADER NAVIGATION
+   - Logo: Feather icon + "Victorian Poems"
+   - Nav links with icons:
+     * Create (Sparkles icon)
+     * My Poems (BookMarked icon) - only shown if logged in
+     * Gallery (Image icon)
+   - Auth buttons: Sign In / Register / Sign Out
+
+7. UI/UX IMPROVEMENTS
+   - ALL emojis replaced with Lucide icons throughout entire app
+   - Modal.svelte component for all user feedback (replaces alert() and confirm())
+   - Victorian styling: parchment backgrounds, sepia/gold accents, ornate fonts
+   - Responsive design (mobile + desktop)
+   - Hover effects on cards (.hover-lift class)
+   - Fade-in animations for collapsible elements
+
+FIRESTORE DATA STRUCTURE
+------------------------
+Collection: poems
+{
+  authorId: string,
+  authorUsername: string,
+  title: string,
+  content: string (the poem text),
+  isAIGenerated: boolean,
+  aiPrompt: string (original user prompt if AI generated),
+  isPublic: boolean,
+  shareId: string (UUID for sharing),
+  categories: array (AI-generated tags),
+  tags: array,
+  sentiment: string (AI-generated),
+  views: number,
+  formatting: {
+    fontFamily: string,
+    fontSize: number,
+    color: string,
+    alignment: string,
+    lineSpacing: number
+  },
+  createdAt: timestamp,
+  updatedAt: timestamp
+}
+
+IMPORTANT FIXES APPLIED
+-----------------------
+
+1. TITLE PARSING BUG (backend/app/Services/GroqService.php)
+   Issue: AI was outputting titles without "TITLE:" prefix
+   Fix: Added regex to handle both formats:
+        - Format 1: "TITLE: Morning's Warm Embrace\n---\n[poem]"
+        - Format 2: "Morning's Warm Embrace\n---\n[poem]" (validates <100 chars, single line)
+
+2. FIRESTORE COMPOSITE INDEX ERROR (frontend/src/routes/poems/+page.svelte)
+   Issue: Using where() + orderBy() requires composite index
+   Fix: Removed orderBy() from Firestore query, sort client-side in JavaScript instead
+
+3. POEM LOST ON LOGIN REDIRECT (frontend/src/routes/create/+page.svelte)
+   Issue: Generating poem without login, then clicking save → redirect → poem lost
+   Fix: Save poem/title/prompt to localStorage before redirect
+        onMount checks for saved data after login, auto-restores and saves poem
+
+4. SAVE FLOW UX (frontend/src/routes/create/+page.svelte)
+   Issue: After AI generated title, still asking user to enter title in form
+   Fix: Auto-save with AI-generated title, redirect to poem view page immediately
+        User can edit title later from view/edit page
+
+5. JAVASCRIPT ALERTS → MODALS
+   Issue: Using vanilla alert() and confirm() throughout app
+   Fix: Created Modal.svelte component (Victorian-styled)
+        Supports types: info, success, error, confirm
+        Replaced all alerts in: create page, my poems page, poem view page
+
+FILE STRUCTURE
+--------------
+poems_viewer/
+├── todo.txt (THIS FILE)
+├── frontend/
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── +page.svelte              (Home/landing)
+│   │   │   ├── +layout.svelte            (Root layout with Header)
+│   │   │   ├── create/+page.svelte       (AI poem generator) ✅
+│   │   │   ├── gallery/+page.svelte      (Public gallery) ✅
+│   │   │   ├── poems/
+│   │   │   │   ├── +page.svelte          (My Poems list) ✅
+│   │   │   │   └── [id]/+page.svelte     (View single poem)
+│   │   │   └── auth/
+│   │   │       ├── login/+page.svelte
+│   │   │       └── register/+page.svelte
+│   │   ├── lib/
+│   │   │   ├── components/
+│   │   │   │   ├── Header.svelte         (Nav with Lucide icons) ✅
+│   │   │   │   └── Modal.svelte          (Victorian modal) ✅
+│   │   │   ├── services/
+│   │   │   │   ├── firebase.js           (Firebase config)
+│   │   │   │   └── api.js                (Backend API calls)
+│   │   │   └── stores/
+│   │   │       └── auth.js               (Auth state)
+│   │   ├── app.css                       (Tailwind + Victorian styles)
+│   │   └── app.html
+│   ├── tailwind.config.js                (Custom Victorian colors)
+│   ├── package.json
+│   └── .env.local                        (Firebase keys)
+│
+└── backend/
+    ├── app/
+    │   ├── Http/Controllers/API/
+    │   │   └── AIController.php          (Poem generation endpoint)
+    │   └── Services/
+    │       └── GroqService.php           (Groq AI integration) ✅
+    ├── routes/
+    │   └── api.php                       (API routes)
+    ├── bootstrap/app.php                 (CORS config)
+    └── .env                              (GROQ_API_KEY)
+
+GIT STATUS
+----------
+Branch: main
+Status: Clean working tree (all changes committed)
+
+Recent commits:
+- Change icons
+- Replace remaining alert with modal in poem view page
+- Fix AI title parsing: handle format without TITLE: prefix
+- Improve save flow: auto-save with AI title, redirect to view page
+- Fix UX issues: modals, poem persistence, AI title generation
+
+DESIGN PATTERNS USED
+--------------------
+1. Icons: Lucide Svelte library (NOT emojis)
+   - Import from 'lucide-svelte'
+   - Use as components: <Sparkles size={18} />
+
+2. Modals: Modal.svelte component (NOT alert/confirm)
+   - Types: info, success, error, confirm
+   - Binding: bind:show={showModal}
+
+3. Victorian Styling:
+   - Colors: gold-600, sepia-700, parchment-50, ink-800
+   - Fonts: font-playfair, font-cormorant, font-crimson
+   - Components: .card-victorian, .btn-victorian, .input-victorian, .hover-lift
+
+4. Firestore Queries:
+   - Avoid orderBy() with where() (requires composite index)
+   - Sort client-side with JavaScript .sort() instead
+
+5. Scroll Buttons Pattern:
+   - Listen to window scroll event
+   - Show/hide buttons when scrollY > 300px
+   - scrollTo({ behavior: 'smooth' })
+
+KNOWN CONSTRAINTS
+-----------------
+- Firebase Firestore composite indexes not used (sorting done client-side)
+- AI title parsing assumes title is <100 characters and single-line
+- localStorage used for cross-page data (poem persistence during login flow)
+
+POTENTIAL NEXT FEATURES (NOT STARTED)
+-------------------------------------
+- User profile pages (/users/[username])
+- Edit poem functionality (/poems/[id]/edit)
+- Advanced gallery filters (date range, sort by views/date)
+- Share poems via unique URLs (/share/[shareId])
+- Export poems as PDF or images
+- More AI customization (style, length, rhyme scheme)
+- Poem versioning/history
+- Comments/likes on public poems
+- User collections/folders
+
+INSTRUCTIONS FOR CONTINUING ON NEW LAPTOP
+------------------------------------------
+1. Clone the repo
+2. Read this file (todo.txt)
+3. Ask Claude Code: "Read todo.txt and help me continue this project"
+4. Claude will have full context and can help with:
+   - Setting up environment
+   - Continuing feature development
+   - Bug fixes
+   - Code improvements
+
+CRITICAL NOTES
+--------------
+❌ DO NOT use emojis - use Lucide icons
+❌ DO NOT use alert() or confirm() - use Modal.svelte
+❌ DO NOT use orderBy() with where() in Firestore - sort client-side
+✅ ALWAYS use Lucide icons from lucide-svelte
+✅ ALWAYS use Modal component for user feedback
+✅ ALWAYS follow Victorian color scheme (gold, sepia, parchment)
+✅ Stats section has NO "Statistics" title (just the 3 stat boxes)
+
+END OF FILE
