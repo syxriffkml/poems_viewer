@@ -173,15 +173,19 @@ poems_viewer/
 │   │   │   ├── create/+page.svelte       (AI poem generator) ✅
 │   │   │   ├── gallery/+page.svelte      (Public gallery) ✅
 │   │   │   ├── poems/
-│   │   │   │   ├── +page.svelte          (My Poems list) ✅
-│   │   │   │   └── [id]/+page.svelte     (View single poem)
+│   │   │   │   ├── +page.svelte          (My Poems list + search) ✅
+│   │   │   │   ├── [id]/+page.svelte     (View single poem) ✅
+│   │   │   │   └── [id]/edit/+page.svelte (Edit poem) ✅
+│   │   │   ├── share/
+│   │   │   │   └── [shareId]/+page.svelte (Share poem via URL) ✅
 │   │   │   └── auth/
 │   │   │       ├── login/+page.svelte
 │   │   │       └── register/+page.svelte
 │   │   ├── lib/
 │   │   │   ├── components/
 │   │   │   │   ├── Header.svelte         (Nav with Lucide icons) ✅
-│   │   │   │   └── Modal.svelte          (Victorian modal) ✅
+│   │   │   │   ├── Modal.svelte          (Victorian modal) ✅
+│   │   │   │   └── LoadingOverlay.svelte (Full-page loading) ✅
 │   │   │   ├── services/
 │   │   │   │   ├── firebase.js           (Firebase config)
 │   │   │   │   └── api.js                (Backend API calls)
@@ -246,18 +250,31 @@ KNOWN CONSTRAINTS
 - AI title parsing assumes title is <100 characters and single-line
 - localStorage used for cross-page data (poem persistence during login flow)
 
+9. SHARE POEM PAGE (/share/[shareId])
+   - Public share page accessible via unique UUID link
+   - Displays poem with full formatting (font, color, alignment, spacing)
+   - Shows author, date, AI generated badge, categories/tags
+   - Actions: Copy Poem, Copy Share Link, Browse Gallery
+   - No login required to view shared poems
+   - Share button on poem view page copies share URL to clipboard
+
+10. SEARCH WITHIN MY POEMS (/poems)
+    - Search bar with Search icon always visible above poems grid
+    - Filters by title, content, categories, and tags
+    - Shows result count when searching
+    - Empty state with "No poems found" message
+    - Client-side filtering (reactive via Svelte $:)
+
 POTENTIAL NEXT FEATURES (NOT STARTED)
 -------------------------------------
 - User profile pages (/users/[username])
 - Advanced gallery filters (date range, sort by views/date)
-- Share poems via unique URLs (/share/[shareId])
 - Export poems as PDF or images
 - More AI customization (style, length, rhyme scheme)
 - Poem versioning/history
 - Comments/likes on public poems
 - User collections/folders
 - Favorites/bookmarking system
-- Search within user's own poems
 
 INSTRUCTIONS FOR CONTINUING ON NEW LAPTOP
 ------------------------------------------
