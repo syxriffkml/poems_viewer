@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { db } from '$lib/services/firebase';
 	import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 	import { Search, SlidersHorizontal, X, Tag, Heart, TrendingUp, Scroll, User, Calendar, Eye, Sparkles, BookOpen, ArrowUp, ArrowDown } from 'lucide-svelte';
 
 	let poems = [];
@@ -141,6 +142,8 @@
 	<title>Gallery - Victorian Poems</title>
 </svelte:head>
 
+<LoadingOverlay show={loading} message="Loading gallery..." />
+
 <div class="container mx-auto px-4 py-8">
 	<!-- Header -->
 	<div class="mb-8 text-center">
@@ -243,12 +246,7 @@
 
 	<!-- Loading State -->
 	{#if loading}
-		<div class="flex items-center justify-center py-20">
-			<div class="text-center">
-				<BookOpen size={64} class="text-gold-600 mx-auto mb-4 animate-pulse" />
-				<p class="text-xl text-gold-600">Loading gallery...</p>
-			</div>
-		</div>
+		<!-- Loading handled by overlay -->
 	{:else if error}
 		<div class="card-victorian text-center py-16">
 			<X size={64} class="text-burgundy-500 mx-auto mb-4" />

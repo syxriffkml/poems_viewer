@@ -1,5 +1,6 @@
 <script>
 	import { auth, db } from '$lib/services/firebase';
+	import { authStore } from '$lib/stores/auth';
 	import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 	import { doc, setDoc } from 'firebase/firestore';
 	import { goto } from '$app/navigation';
@@ -44,7 +45,12 @@
 		try {
 			const result = await createUserWithEmailAndPassword(auth, email, password);
 			await updateProfile(result.user, { displayName });
-			await createUserDocument(result.user);
+			await result.user.reload(); // Reload user to get updated profile
+
+			// Manually update auth store with fresh user data
+			authStore.setUser(auth.currentUser);
+
+			await createUserDocument(auth.currentUser); // Use fresh user data
 			goto('/create');
 		} catch (err) {
 			if (err.code === 'auth/email-already-in-use') {

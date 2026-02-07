@@ -45,7 +45,11 @@
 				<!-- User Menu -->
 				<div class="flex items-center gap-3">
 					<span class="text-sm text-ink-700 hidden sm:inline">
-						{$authStore.user.displayName || $authStore.user.email}
+						{#if $authStore.user.displayName}
+							{$authStore.user.displayName}
+						{:else}
+							<span class="inline-block w-20 h-4 bg-parchment-300 rounded animate-pulse"></span>
+						{/if}
 					</span>
 					<button on:click={handleLogout} class="btn-victorian-secondary py-2 px-4 text-sm">
 						Sign Out

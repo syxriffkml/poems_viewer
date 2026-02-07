@@ -6,6 +6,7 @@
 	import { db } from '$lib/services/firebase';
 	import { doc, getDoc } from 'firebase/firestore';
 	import Modal from '$lib/components/Modal.svelte';
+	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 
 	let poem = null;
 	let loading = true;
@@ -78,14 +79,11 @@
 	<p>{modalMessage}</p>
 </Modal>
 
+<LoadingOverlay show={loading} message="Loading poem..." />
+
 <div class="container mx-auto px-4 py-8 max-w-4xl">
 	{#if loading}
-		<div class="flex items-center justify-center py-20">
-			<div class="text-center">
-				<div class="text-6xl mb-4">📜</div>
-				<p class="text-xl text-gold-600 animate-pulse">Loading poem...</p>
-			</div>
-		</div>
+		<!-- Loading handled by overlay -->
 	{:else if error}
 		<div class="card-victorian text-center py-16">
 			<div class="text-6xl mb-4">❌</div>

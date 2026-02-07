@@ -5,6 +5,7 @@
 	import { db } from '$lib/services/firebase';
 	import { collection, query, where, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 	import Modal from '$lib/components/Modal.svelte';
+	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 	import { Eye, Edit, Globe, Lock, Trash2, Sparkles, ArrowUp, ArrowDown, BookMarked } from 'lucide-svelte';
 
 	let poems = [];
@@ -154,6 +155,8 @@
 	<p>{modalMessage}</p>
 </Modal>
 
+<LoadingOverlay show={loading} message="Loading your poems..." />
+
 <div class="container mx-auto px-4 py-8">
 	<div class="mb-8">
 		<div class="flex items-center gap-3 mb-2">
@@ -170,12 +173,7 @@
 	{/if}
 
 	{#if loading}
-		<div class="flex items-center justify-center py-20">
-			<div class="text-center">
-				<BookMarked size={64} class="text-gold-600 mx-auto mb-4 animate-pulse" />
-				<p class="text-xl text-gold-600">Loading your poems...</p>
-			</div>
-		</div>
+		<!-- Loading handled by overlay -->
 	{:else if poems.length === 0}
 		<div class="card-victorian text-center py-16">
 			<Edit size={64} class="text-sepia-400 mx-auto mb-4" />
