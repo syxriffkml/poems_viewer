@@ -239,23 +239,19 @@
 						<label class="block text-xs font-semibold mb-2 text-sepia-700">
 							Text Color
 						</label>
-						<div class="flex gap-2">
+						<div class="flex gap-3 items-center">
 							{#each colorOptions as colorOption}
 								<button
 									type="button"
 									on:click={() => color = colorOption.value}
-									class="flex-1 p-2 border-2 rounded text-xs transition-all hover:scale-105"
+									class="w-10 h-10 rounded-full border-2 transition-all hover:scale-110 flex-shrink-0"
 									class:border-gold-600={color === colorOption.value}
-									class:bg-gold-50={color === colorOption.value}
-									class:border-sepia-300={color !== colorOption.value}
+									class:border-2={color === colorOption.value}
+									class:shadow-lg={color === colorOption.value}
+									class:border-sepia-200={color !== colorOption.value}
+									style="background-color: {colorOption.value}"
 									title={colorOption.name}
-								>
-									<div
-										class="w-full h-6 rounded mb-1"
-										style="background-color: {colorOption.value}"
-									></div>
-									{colorOption.name}
-								</button>
+								></button>
 							{/each}
 						</div>
 					</div>
@@ -263,39 +259,39 @@
 						<label class="block text-xs font-semibold mb-2 text-sepia-700">
 							Text Alignment
 						</label>
-						<div class="flex gap-2">
+						<div class="inline-flex gap-1 p-1 bg-parchment-100 border border-sepia-300 rounded">
 							<button
 								type="button"
 								on:click={() => alignment = 'left'}
-								class="flex-1 p-3 border-2 rounded transition-all hover:scale-105"
-								class:border-gold-600={alignment === 'left'}
-								class:bg-gold-50={alignment === 'left'}
-								class:border-sepia-300={alignment !== 'left'}
+								class="p-2.5 rounded transition-all"
+								class:bg-gold-600={alignment === 'left'}
+								class:text-parchment-50={alignment === 'left'}
+								class:hover:bg-parchment-200={alignment !== 'left'}
 								title="Align Left"
 							>
-								<AlignLeft size={20} class="mx-auto" />
+								<AlignLeft size={18} />
 							</button>
 							<button
 								type="button"
 								on:click={() => alignment = 'center'}
-								class="flex-1 p-3 border-2 rounded transition-all hover:scale-105"
-								class:border-gold-600={alignment === 'center'}
-								class:bg-gold-50={alignment === 'center'}
-								class:border-sepia-300={alignment !== 'center'}
+								class="p-2.5 rounded transition-all"
+								class:bg-gold-600={alignment === 'center'}
+								class:text-parchment-50={alignment === 'center'}
+								class:hover:bg-parchment-200={alignment !== 'center'}
 								title="Align Center"
 							>
-								<AlignCenter size={20} class="mx-auto" />
+								<AlignCenter size={18} />
 							</button>
 							<button
 								type="button"
 								on:click={() => alignment = 'right'}
-								class="flex-1 p-3 border-2 rounded transition-all hover:scale-105"
-								class:border-gold-600={alignment === 'right'}
-								class:bg-gold-50={alignment === 'right'}
-								class:border-sepia-300={alignment !== 'right'}
+								class="p-2.5 rounded transition-all"
+								class:bg-gold-600={alignment === 'right'}
+								class:text-parchment-50={alignment === 'right'}
+								class:hover:bg-parchment-200={alignment !== 'right'}
 								title="Align Right"
 							>
-								<AlignRight size={20} class="mx-auto" />
+								<AlignRight size={18} />
 							</button>
 						</div>
 					</div>
