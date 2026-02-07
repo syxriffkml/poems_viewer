@@ -286,7 +286,7 @@
 						<h3 class="text-xl font-bold mb-2 line-clamp-2">{poem.title}</h3>
 						<div class="flex items-center gap-2 text-sm text-sepia-600 mb-2">
 							<a
-								href="/users/{poem.authorUsername}"
+								href="/profile/{poem.authorId}"
 								class="hover:text-gold-600 transition-colors flex items-center gap-1"
 							>
 								<User size={14} />

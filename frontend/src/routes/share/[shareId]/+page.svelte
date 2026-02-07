@@ -110,7 +110,7 @@
 		<div class="mb-8">
 			<h1 class="text-4xl md:text-5xl font-bold mb-4">{poem.title}</h1>
 			<div class="flex flex-wrap items-center gap-3 text-sm text-sepia-600">
-				<span class="flex items-center gap-1"><User size={14} /> {poem.authorUsername}</span>
+				<a href="/profile/{poem.authorId}" class="flex items-center gap-1 hover:text-gold-600 transition-colors"><User size={14} /> {poem.authorUsername}</a>
 				<span>·</span>
 				<span class="flex items-center gap-1"><Calendar size={14} /> {formatDate(poem.createdAt)}</span>
 				{#if poem.isAIGenerated}
