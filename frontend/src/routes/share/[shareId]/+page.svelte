@@ -1,13 +1,11 @@
 <script>
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { authStore } from '$lib/stores/auth';
-	import { goto } from '$app/navigation';
 	import { db } from '$lib/services/firebase';
-	import { doc, getDoc } from 'firebase/firestore';
+	import { collection, query, where, getDocs } from 'firebase/firestore';
 	import Modal from '$lib/components/Modal.svelte';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
-	import { X, Sparkles, Globe, Lock, Copy, Edit, ArrowLeft, BookOpen, User, Calendar, Share2 } from 'lucide-svelte';
+	import { X, Sparkles, Globe, Copy, BookOpen, User, Calendar, Share2, Feather } from 'lucide-svelte';
 
 	let poem = null;
 	let loading = true;
@@ -28,25 +26,19 @@
 		error = '';
 
 		try {
-			const poemId = $page.params.id;
-			const docRef = doc(db, 'poems', poemId);
-			const docSnap = await getDoc(docRef);
+			const shareId = $page.params.shareId;
+			const q = query(collection(db, 'poems'), where('shareId', '==', shareId));
+			const querySnapshot = await getDocs(q);
 
-			if (!docSnap.exists()) {
-				error = 'Poem not found';
+			if (querySnapshot.empty) {
+				error = 'Poem not found or link has expired';
 				return;
 			}
 
+			const docSnap = querySnapshot.docs[0];
 			poem = { id: docSnap.id, ...docSnap.data() };
-
-			// Check permissions
-			const user = $authStore.user;
-			if (!poem.isPublic && (!user || poem.authorId !== user.uid)) {
-				error = 'You do not have permission to view this poem';
-				poem = null;
-			}
 		} catch (err) {
-			console.error('Error loading poem:', err);
+			console.error('Error loading shared poem:', err);
 			error = 'Failed to load poem. Please try again.';
 		} finally {
 			loading = false;
@@ -71,26 +63,24 @@
 		modalMessage = 'Poem copied to clipboard';
 	}
 
-	function sharePoem() {
-		if (!poem.shareId) return;
-		const shareUrl = `${window.location.origin}/share/${poem.shareId}`;
-		navigator.clipboard.writeText(shareUrl);
+	function copyShareLink() {
+		navigator.clipboard.writeText(window.location.href);
 		showModal = true;
 		modalType = 'success';
-		modalTitle = 'Share Link Copied!';
-		modalMessage = 'Anyone with this link can view the poem';
+		modalTitle = 'Link Copied!';
+		modalMessage = 'Share link copied to clipboard';
 	}
 </script>
 
 <svelte:head>
-	<title>{poem?.title || 'View Poem'} - Victorian Poems</title>
+	<title>{poem?.title || 'Shared Poem'} - Victorian Poems</title>
 </svelte:head>
 
 <Modal bind:show={showModal} title={modalTitle} type={modalType}>
 	<p>{modalMessage}</p>
 </Modal>
 
-<LoadingOverlay show={loading} message="Loading poem..." />
+<LoadingOverlay show={loading} message="Loading shared poem..." />
 
 <div class="container mx-auto px-4 py-8 max-w-4xl">
 	{#if loading}
@@ -99,41 +89,35 @@
 		<div class="card-victorian text-center py-16">
 			<X size={64} class="text-burgundy-500 mx-auto mb-4" />
 			<h2 class="text-2xl font-bold mb-3">{error}</h2>
-			<div class="flex gap-3 justify-center mt-6">
-				<a href="/poems" class="btn-victorian-secondary">
-					Back to My Poems
+			<p class="text-sepia-600 mb-6">This poem may have been removed or the link is invalid.</p>
+			<div class="flex gap-3 justify-center">
+				<a href="/gallery" class="btn-victorian flex items-center gap-2">
+					<BookOpen size={18} /> Browse Gallery
 				</a>
-				<a href="/gallery" class="btn-victorian">
-					Browse Gallery
+				<a href="/" class="btn-victorian-secondary flex items-center gap-2">
+					<Feather size={18} /> Home
 				</a>
 			</div>
 		</div>
 	{:else if poem}
+		<!-- Shared Badge -->
+		<div class="flex items-center gap-2 mb-4 text-sm text-sepia-600">
+			<Share2 size={16} />
+			<span>Shared poem</span>
+		</div>
+
 		<!-- Poem Header -->
 		<div class="mb-8">
 			<h1 class="text-4xl md:text-5xl font-bold mb-4">{poem.title}</h1>
 			<div class="flex flex-wrap items-center gap-3 text-sm text-sepia-600">
 				<span class="flex items-center gap-1"><User size={14} /> {poem.authorUsername}</span>
-				<span>•</span>
+				<span>·</span>
 				<span class="flex items-center gap-1"><Calendar size={14} /> {formatDate(poem.createdAt)}</span>
 				{#if poem.isAIGenerated}
 					<span class="px-2 py-1 bg-gold-100 border border-gold-400 rounded flex items-center gap-1">
 						<Sparkles size={14} /> AI Generated
 					</span>
 				{/if}
-				<span class="px-2 py-1 rounded flex items-center gap-1"
-					class:bg-green-100={poem.isPublic}
-					class:border-green-400={poem.isPublic}
-					class:border={poem.isPublic}
-					class:bg-sepia-100={!poem.isPublic}
-					class:border-sepia-400={!poem.isPublic}
-				>
-					{#if poem.isPublic}
-						<Globe size={14} /> Public
-					{:else}
-						<Lock size={14} /> Private
-					{/if}
-				</span>
 			</div>
 		</div>
 
@@ -151,11 +135,23 @@
 			</div>
 		</div>
 
-		<!-- AI Prompt (if AI generated) -->
-		{#if poem.isAIGenerated && poem.aiPrompt}
-			<div class="card-victorian mb-6 bg-parchment-100">
-				<h3 class="text-lg font-bold mb-2 flex items-center gap-2"><Sparkles size={20} class="text-gold-600" /> AI Prompt</h3>
-				<p class="text-sepia-700 italic">{poem.aiPrompt}</p>
+		<!-- Categories/Tags -->
+		{#if poem.categories?.length > 0 || poem.tags?.length > 0}
+			<div class="card-victorian mb-6">
+				{#if poem.categories?.length > 0}
+					<div class="flex flex-wrap gap-2 mb-3">
+						{#each poem.categories as category}
+							<span class="px-3 py-1 bg-gold-100 border border-gold-400 rounded text-sm">{category}</span>
+						{/each}
+					</div>
+				{/if}
+				{#if poem.tags?.length > 0}
+					<div class="flex flex-wrap gap-2">
+						{#each poem.tags as tag}
+							<span class="px-3 py-1 bg-parchment-100 border border-sepia-300 rounded text-sm text-sepia-700">{tag}</span>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		{/if}
 
@@ -163,25 +159,14 @@
 		<div class="card-victorian">
 			<div class="flex flex-wrap gap-3">
 				<button on:click={copyToClipboard} class="btn-victorian-secondary flex items-center gap-2">
-					<Copy size={18} /> Copy to Clipboard
+					<Copy size={18} /> Copy Poem
 				</button>
-				{#if poem.shareId}
-					<button on:click={sharePoem} class="btn-victorian flex items-center gap-2">
-						<Share2 size={18} /> Share Poem
-					</button>
-				{/if}
-				{#if $authStore.user && poem.authorId === $authStore.user.uid}
-					<a href="/poems/{poem.id}/edit" class="btn-victorian flex items-center gap-2">
-						<Edit size={18} /> Edit Poem
-					</a>
-					<a href="/poems" class="btn-victorian-secondary flex items-center gap-2">
-						<ArrowLeft size={18} /> Back to My Poems
-					</a>
-				{:else}
-					<a href="/gallery" class="btn-victorian-secondary flex items-center gap-2">
-						<BookOpen size={18} /> Back to Gallery
-					</a>
-				{/if}
+				<button on:click={copyShareLink} class="btn-victorian flex items-center gap-2">
+					<Share2 size={18} /> Copy Share Link
+				</button>
+				<a href="/gallery" class="btn-victorian-secondary flex items-center gap-2">
+					<BookOpen size={18} /> Browse Gallery
+				</a>
 			</div>
 		</div>
 	{/if}
