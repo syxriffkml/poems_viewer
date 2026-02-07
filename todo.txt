@@ -86,10 +86,24 @@ COMPLETED FEATURES ✅
 7. UI/UX IMPROVEMENTS
    - ALL emojis replaced with Lucide icons throughout entire app
    - Modal.svelte component for all user feedback (replaces alert() and confirm())
+   - LoadingOverlay.svelte component for full-page loading states with animated Feather icon
    - Victorian styling: parchment backgrounds, sepia/gold accents, ornate fonts
    - Responsive design (mobile + desktop)
    - Hover effects on cards (.hover-lift class)
    - Fade-in animations for collapsible elements
+
+8. EDIT POEM PAGE (/poems/[id]/edit)
+   - Full editing interface for poem title, content, and visibility
+   - Advanced formatting controls:
+     * Font family selector (6 Victorian/classic fonts)
+     * Font size slider (12-24px)
+     * Text color palette (5 Victorian colors)
+     * Text alignment (left, center, right)
+     * Line spacing slider (1.0-2.5)
+   - Real-time preview of formatted poem
+   - Permission check: only author can access edit page
+   - Auto-saves and redirects to view page on success
+   - Icons: Save, X (cancel), Eye (preview), Lock/Globe, Feather, Type, Palette
 
 FIRESTORE DATA STRUCTURE
 ------------------------
@@ -193,14 +207,14 @@ poems_viewer/
 GIT STATUS
 ----------
 Branch: main
-Status: Clean working tree (all changes committed)
+Status: 2 commits ahead of origin/main
 
 Recent commits:
+- Add edit poem functionality
+- Add LoadingOverlay component and improve user experience
+- Remove Statistics title from My Poems stats section
 - Change icons
 - Replace remaining alert with modal in poem view page
-- Fix AI title parsing: handle format without TITLE: prefix
-- Improve save flow: auto-save with AI title, redirect to view page
-- Fix UX issues: modals, poem persistence, AI title generation
 
 DESIGN PATTERNS USED
 --------------------
@@ -235,7 +249,6 @@ KNOWN CONSTRAINTS
 POTENTIAL NEXT FEATURES (NOT STARTED)
 -------------------------------------
 - User profile pages (/users/[username])
-- Edit poem functionality (/poems/[id]/edit)
 - Advanced gallery filters (date range, sort by views/date)
 - Share poems via unique URLs (/share/[shareId])
 - Export poems as PDF or images
@@ -243,6 +256,8 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
 - Poem versioning/history
 - Comments/likes on public poems
 - User collections/folders
+- Favorites/bookmarking system
+- Search within user's own poems
 
 INSTRUCTIONS FOR CONTINUING ON NEW LAPTOP
 ------------------------------------------
