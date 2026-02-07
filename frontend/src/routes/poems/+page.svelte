@@ -6,12 +6,13 @@
 	import { collection, query, where, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 	import Modal from '$lib/components/Modal.svelte';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
-	import { Eye, Edit, Globe, Lock, Trash2, Sparkles, ArrowUp, ArrowDown, BookMarked } from 'lucide-svelte';
+	import { Eye, Edit, Globe, Lock, Trash2, Sparkles, ArrowUp, ArrowDown, BookMarked, Search } from 'lucide-svelte';
 
 	let poems = [];
 	let loading = true;
 	let error = '';
 	let showScrollButtons = false;
+	let searchQuery = '';
 
 	// Modal state
 	let showModal = false;
@@ -140,6 +141,16 @@
 		if (content.length <= maxLength) return content;
 		return content.slice(0, maxLength) + '...';
 	}
+
+	$: filteredPoems = searchQuery.trim()
+		? poems.filter(p => {
+			const q = searchQuery.toLowerCase();
+			return p.title?.toLowerCase().includes(q) ||
+				p.content?.toLowerCase().includes(q) ||
+				p.categories?.some(c => c.toLowerCase().includes(q)) ||
+				p.tags?.some(t => t.toLowerCase().includes(q));
+		})
+		: poems;
 </script>
 
 <svelte:head>
@@ -207,9 +218,34 @@
 			</div>
 		</div>
 
+		<!-- Search Bar -->
+		<div class="mb-6 relative">
+			<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+				<Search size={18} class="text-sepia-500" />
+			</div>
+			<input
+				type="text"
+				bind:value={searchQuery}
+				placeholder="Search your poems by title, content, or tags..."
+				class="input-victorian pl-11"
+			/>
+			{#if searchQuery.trim()}
+				<p class="text-sm text-sepia-600 mt-2">
+					{filteredPoems.length} {filteredPoems.length === 1 ? 'poem' : 'poems'} found
+				</p>
+			{/if}
+		</div>
+
 		<!-- Poems Grid -->
+		{#if filteredPoems.length === 0 && searchQuery.trim()}
+			<div class="card-victorian text-center py-12">
+				<Search size={48} class="text-sepia-400 mx-auto mb-4" />
+				<h2 class="text-xl font-bold mb-2">No poems found</h2>
+				<p class="text-sepia-600">Try a different search term</p>
+			</div>
+		{:else}
 		<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-			{#each poems as poem (poem.id)}
+			{#each filteredPoems as poem (poem.id)}
 				<div class="card-victorian hover-lift">
 					<!-- Poem Header -->
 					<div class="mb-4">
@@ -289,6 +325,7 @@
 				</div>
 			{/each}
 		</div>
+		{/if}
 	{/if}
 </div>
 
