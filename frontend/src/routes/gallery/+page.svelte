@@ -3,7 +3,7 @@
 	import { db } from '$lib/services/firebase';
 	import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
-	import { Search, SlidersHorizontal, X, Tag, Heart, TrendingUp, Scroll, User, Calendar, Eye, Sparkles, BookOpen, ArrowUp, ArrowDown } from 'lucide-svelte';
+	import { Search, SlidersHorizontal, X, Tag, Heart, TrendingUp, Scroll, User, Calendar, Eye, Sparkles, BookOpen, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte';
 
 	let poems = [];
 	let loading = true;
@@ -11,6 +11,7 @@
 	let selectedCategory = '';
 	let selectedSentiment = '';
 	let searchQuery = '';
+	let sortBy = 'newest';
 	let showFilters = false;
 	let showScrollButtons = false;
 
@@ -104,37 +105,36 @@
 		return content.slice(0, maxLength) + '...';
 	}
 
-	// Filter poems based on selected filters and search query
+	// Filter and sort poems
 	$: filteredPoems = poems.filter(poem => {
-		// Category filter
 		if (selectedCategory && (!poem.categories || !poem.categories.includes(selectedCategory))) {
 			return false;
 		}
-
-		// Sentiment filter
 		if (selectedSentiment && poem.sentiment !== selectedSentiment) {
 			return false;
 		}
-
-		// Search filter
 		if (searchQuery) {
 			const search = searchQuery.toLowerCase();
 			const titleMatch = poem.title?.toLowerCase().includes(search);
 			const contentMatch = poem.content?.toLowerCase().includes(search);
 			const authorMatch = poem.authorUsername?.toLowerCase().includes(search);
-
 			if (!titleMatch && !contentMatch && !authorMatch) {
 				return false;
 			}
 		}
-
 		return true;
+	}).sort((a, b) => {
+		const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+		const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+		if (sortBy === 'oldest') return aTime - bTime;
+		return bTime - aTime;
 	});
 
 	function clearFilters() {
 		selectedCategory = '';
 		selectedSentiment = '';
 		searchQuery = '';
+		sortBy = 'newest';
 	}
 </script>
 
@@ -197,7 +197,7 @@
 					{/if}
 				</div>
 
-				<div class="grid md:grid-cols-2 gap-4">
+				<div class="grid md:grid-cols-3 gap-4">
 					<div>
 						<label for="category" class="flex items-center gap-2 text-sm font-semibold mb-2">
 							<Tag size={16} />
@@ -229,6 +229,21 @@
 							{#each sentiments as sentiment}
 								<option value={sentiment}>{sentiment}</option>
 							{/each}
+						</select>
+					</div>
+
+					<div>
+						<label for="sortBy" class="flex items-center gap-2 text-sm font-semibold mb-2">
+							<ArrowUpDown size={16} />
+							<span>Sort By</span>
+						</label>
+						<select
+							id="sortBy"
+							bind:value={sortBy}
+							class="input-victorian"
+						>
+							<option value="newest">Newest First</option>
+							<option value="oldest">Oldest First</option>
 						</select>
 					</div>
 				</div>
