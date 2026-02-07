@@ -239,19 +239,17 @@
 						<label class="block text-xs font-semibold mb-2 text-sepia-700">
 							Text Color
 						</label>
-						<div class="flex gap-3 items-center">
+						<div class="flex gap-2">
 							{#each colorOptions as colorOption}
 								<button
 									type="button"
 									on:click={() => color = colorOption.value}
-									class="w-10 h-10 rounded-full border-2 transition-all hover:scale-110 flex-shrink-0"
-									class:border-gold-600={color === colorOption.value}
-									class:border-2={color === colorOption.value}
-									class:shadow-lg={color === colorOption.value}
-									class:border-sepia-200={color !== colorOption.value}
-									style="background-color: {colorOption.value}"
+									class="flex-1 rounded flex items-center justify-center transition-all hover:scale-105 py-5"
+									style="background-color: {colorOption.value}; border: {color === colorOption.value ? '3px solid #b8860b' : '2px solid #c4b5a0'}; box-shadow: {color === colorOption.value ? '0 0 0 3px #d4a843' : 'none'}; padding-top: 0.5rem; padding-bottom: 0.5rem;"
 									title={colorOption.name}
-								></button>
+								>
+									<span style="color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.6);" class="text-xs font-semibold">{colorOption.name}</span>
+								</button>
 							{/each}
 						</div>
 					</div>
@@ -259,40 +257,22 @@
 						<label class="block text-xs font-semibold mb-2 text-sepia-700">
 							Text Alignment
 						</label>
-						<div class="inline-flex gap-1 p-1 bg-parchment-100 border border-sepia-300 rounded">
-							<button
-								type="button"
-								on:click={() => alignment = 'left'}
-								class="p-2.5 rounded transition-all"
-								class:bg-gold-600={alignment === 'left'}
-								class:text-parchment-50={alignment === 'left'}
-								class:hover:bg-parchment-200={alignment !== 'left'}
-								title="Align Left"
-							>
-								<AlignLeft size={18} />
-							</button>
-							<button
-								type="button"
-								on:click={() => alignment = 'center'}
-								class="p-2.5 rounded transition-all"
-								class:bg-gold-600={alignment === 'center'}
-								class:text-parchment-50={alignment === 'center'}
-								class:hover:bg-parchment-200={alignment !== 'center'}
-								title="Align Center"
-							>
-								<AlignCenter size={18} />
-							</button>
-							<button
-								type="button"
-								on:click={() => alignment = 'right'}
-								class="p-2.5 rounded transition-all"
-								class:bg-gold-600={alignment === 'right'}
-								class:text-parchment-50={alignment === 'right'}
-								class:hover:bg-parchment-200={alignment !== 'right'}
-								title="Align Right"
-							>
-								<AlignRight size={18} />
-							</button>
+						<div class="grid grid-cols-3 gap-2">
+							{#each [
+								{ value: 'left', icon: AlignLeft, label: 'Left' },
+								{ value: 'center', icon: AlignCenter, label: 'Center' },
+								{ value: 'right', icon: AlignRight, label: 'Right' }
+							] as opt}
+								<button
+									type="button"
+									on:click={() => alignment = opt.value}
+									class="h-12 rounded flex items-center justify-center transition-all hover:scale-105"
+									style="background-color: {alignment === opt.value ? '#b8860b' : '#f5f0e8'}; border: 2px solid {alignment === opt.value ? '#8b6914' : '#c4b5a0'}; color: {alignment === opt.value ? '#ffffff' : '#4a3f35'};"
+									title="Align {opt.label}"
+								>
+									<svelte:component this={opt.icon} size={22} />
+								</button>
+							{/each}
 						</div>
 					</div>
 				</div>
