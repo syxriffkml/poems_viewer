@@ -3,7 +3,7 @@
 	import { auth } from '$lib/services/firebase';
 	import { signOut } from 'firebase/auth';
 	import { goto } from '$app/navigation';
-	import { Sparkles, BookMarked, Image, Feather } from 'lucide-svelte';
+	import { Sparkles, BookMarked, Image, Feather, Heart } from 'lucide-svelte';
 
 	async function handleLogout() {
 		await signOut(auth);
@@ -29,6 +29,10 @@
 				<a href="/poems" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors flex items-center gap-2">
 					<BookMarked size={18} />
 					<span>My Poems</span>
+				</a>
+				<a href="/favorites" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors flex items-center gap-2">
+					<Heart size={18} />
+					<span>Favorites</span>
 				</a>
 			{/if}
 			<a href="/gallery" class="text-ink-800 hover:text-gold-600 font-semibold transition-colors flex items-center gap-2">

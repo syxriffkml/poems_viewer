@@ -1,8 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
 	import { db } from '$lib/services/firebase';
-	import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+	import { collection, query, where, getDocs, limit, addDoc, deleteDoc, doc } from 'firebase/firestore';
+	import { authStore } from '$lib/stores/auth';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import { Search, SlidersHorizontal, X, Tag, Heart, TrendingUp, Scroll, User, Calendar, Eye, Sparkles, BookOpen, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte';
 
 	let poems = [];
@@ -19,8 +21,19 @@
 	let categories = [];
 	let sentiments = [];
 
-	onMount(() => {
-		loadPublicPoems();
+	// Favorites tracking
+	let favoritesMap = {};       // Map poemId -> favoriteDocId for O(1) lookup
+	let loadingFavoriteId = '';  // Track which poem is being bookmarked/unbookmarked
+
+	// Modal state
+	let showModal = false;
+	let modalTitle = '';
+	let modalMessage = '';
+	let modalType = 'success';
+
+	onMount(async () => {
+		await loadPublicPoems();
+		await loadFavorites(); // Load favorites after poems
 
 		// Show scroll buttons when user scrolls
 		window.addEventListener('scroll', handleScroll);
@@ -88,6 +101,89 @@
 
 		categories = Array.from(categorySet).sort();
 		sentiments = Array.from(sentimentSet).sort();
+	}
+
+	async function loadFavorites() {
+		if (!$authStore.user) return;
+
+		try {
+			const q = query(
+				collection(db, 'favorites'),
+				where('userId', '==', $authStore.user.uid)
+			);
+			const querySnapshot = await getDocs(q);
+
+			// Build map: poemId -> favoriteDocId
+			favoritesMap = {};
+			querySnapshot.docs.forEach(doc => {
+				favoritesMap[doc.data().poemId] = doc.id;
+			});
+		} catch (err) {
+			console.error('Error loading favorites:', err);
+		}
+	}
+
+	async function toggleFavorite(poem, event) {
+		event.preventDefault(); // Prevent card click navigation
+
+		if (!$authStore.user) {
+			modalTitle = 'Sign In Required';
+			modalMessage = 'Please sign in to bookmark poems';
+			modalType = 'info';
+			showModal = true;
+			return;
+		}
+
+		loadingFavoriteId = poem.id;
+
+		try {
+			const favoriteDocId = favoritesMap[poem.id];
+
+			if (favoriteDocId) {
+				// Remove bookmark
+				await deleteDoc(doc(db, 'favorites', favoriteDocId));
+				delete favoritesMap[poem.id];
+				favoritesMap = favoritesMap; // Trigger reactivity
+
+				modalTitle = 'Bookmark Removed';
+				modalMessage = 'Poem removed from favorites';
+				modalType = 'success';
+			} else {
+				// Add bookmark
+				const favoriteData = {
+					userId: $authStore.user.uid,
+					poemId: poem.id,
+					createdAt: new Date(),
+					poemTitle: poem.title,
+					poemAuthorUsername: poem.authorUsername,
+					poemAuthorId: poem.authorId,
+					poemContent: poem.content,
+					poemSentiment: poem.sentiment || '',
+					poemCategories: poem.categories || [],
+					poemIsAIGenerated: poem.isAIGenerated || false,
+					poemCreatedAt: poem.createdAt,
+					poemIsPublic: poem.isPublic
+				};
+
+				const docRef = await addDoc(collection(db, 'favorites'), favoriteData);
+				favoritesMap[poem.id] = docRef.id;
+				favoritesMap = favoritesMap; // Trigger reactivity
+
+				modalTitle = 'Bookmarked!';
+				modalMessage = 'Poem added to your favorites';
+				modalType = 'success';
+			}
+
+			showModal = true;
+		} catch (err) {
+			console.error('Error toggling favorite:', err);
+			modalTitle = 'Error';
+			modalMessage = 'Failed to update bookmark. Please try again.';
+			modalType = 'error';
+			showModal = true;
+		} finally {
+			loadingFavoriteId = '';
+		}
 	}
 
 	function formatDate(timestamp) {
@@ -342,6 +438,31 @@
 						</p>
 					</div>
 
+					<!-- Bookmark Button (only for logged-in users) -->
+					{#if $authStore.user}
+						<button
+							on:click={(e) => toggleFavorite(poem, e)}
+							disabled={loadingFavoriteId === poem.id}
+							class="btn-victorian-secondary w-full py-2 mb-2 flex items-center justify-center gap-2 transition-colors"
+							class:bg-gold-100={favoritesMap[poem.id]}
+							class:border-gold-500={favoritesMap[poem.id]}
+						>
+							<Heart
+								size={16}
+								fill={favoritesMap[poem.id] ? 'currentColor' : 'none'}
+							/>
+							<span>
+								{#if loadingFavoriteId === poem.id}
+									Loading...
+								{:else if favoritesMap[poem.id]}
+									Bookmarked
+								{:else}
+									Bookmark
+								{/if}
+							</span>
+						</button>
+					{/if}
+
 					<!-- View Button -->
 					<a
 						href="/poems/{poem.id}"
@@ -375,3 +496,8 @@
 		</button>
 	</div>
 {/if}
+
+<!-- Modal -->
+<Modal bind:show={showModal} title={modalTitle} type={modalType}>
+	<p>{modalMessage}</p>
+</Modal>
