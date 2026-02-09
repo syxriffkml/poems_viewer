@@ -6,7 +6,8 @@
 	import { collection, query, where, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 	import Modal from '$lib/components/Modal.svelte';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
-	import { Eye, Edit, Globe, Lock, Trash2, Sparkles, ArrowUp, ArrowDown, BookMarked, Search } from 'lucide-svelte';
+	import { calculateReadingTime } from '$lib/utils/readingTime';
+	import { Eye, Edit, Globe, Lock, Trash2, Sparkles, ArrowUp, ArrowDown, BookMarked, Search, Clock } from 'lucide-svelte';
 
 	let poems = [];
 	let loading = true;
@@ -252,6 +253,11 @@
 						<h3 class="text-xl font-bold mb-2 line-clamp-2">{poem.title}</h3>
 						<div class="flex items-center gap-2 text-sm text-sepia-600">
 							<span>{formatDate(poem.createdAt)}</span>
+							<span>•</span>
+							<span class="flex items-center gap-1">
+								<Clock size={14} />
+								<span>{calculateReadingTime(poem.content)}</span>
+							</span>
 							{#if poem.isAIGenerated}
 								<span class="px-2 py-0.5 bg-gold-100 border border-gold-400 rounded text-xs flex items-center gap-1">
 									<Sparkles size={12} />

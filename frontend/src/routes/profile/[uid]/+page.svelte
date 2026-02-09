@@ -4,7 +4,8 @@
 	import { db } from '$lib/services/firebase';
 	import { collection, query, where, getDocs } from 'firebase/firestore';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
-	import { User, Calendar, Eye, Sparkles, Globe, BookMarked, Feather, ArrowUp, ArrowDown } from 'lucide-svelte';
+	import { calculateReadingTime } from '$lib/utils/readingTime';
+	import { User, Calendar, Eye, Sparkles, Globe, BookMarked, Feather, ArrowUp, ArrowDown, Clock } from 'lucide-svelte';
 
 	let poems = [];
 	let authorName = '';
@@ -147,6 +148,10 @@
 							<div class="flex items-center gap-2 text-sm text-sepia-600">
 								<span class="flex items-center gap-1">
 									<Calendar size={12} /> {formatDate(poem.createdAt)}
+								</span>
+								<span>•</span>
+								<span class="flex items-center gap-1">
+									<Clock size={12} /> {calculateReadingTime(poem.content)}
 								</span>
 								{#if poem.isAIGenerated}
 									<span class="px-2 py-0.5 bg-gold-100 border border-gold-400 rounded text-xs flex items-center gap-1">

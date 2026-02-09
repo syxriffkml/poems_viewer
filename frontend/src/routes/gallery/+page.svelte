@@ -5,7 +5,8 @@
 	import { authStore } from '$lib/stores/auth';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 	import Modal from '$lib/components/Modal.svelte';
-	import { Search, SlidersHorizontal, X, Tag, Heart, TrendingUp, Scroll, User, Calendar, Eye, Sparkles, BookOpen, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte';
+	import { calculateReadingTime } from '$lib/utils/readingTime';
+	import { Search, SlidersHorizontal, X, Tag, Heart, TrendingUp, Scroll, User, Calendar, Eye, Sparkles, BookOpen, ArrowUp, ArrowDown, ArrowUpDown, Clock } from 'lucide-svelte';
 
 	let poems = [];
 	let loading = true;
@@ -407,6 +408,11 @@
 							<span class="flex items-center gap-1">
 								<Calendar size={14} />
 								<span>{formatDate(poem.createdAt)}</span>
+							</span>
+							<span>•</span>
+							<span class="flex items-center gap-1">
+								<Clock size={14} />
+								<span>{calculateReadingTime(poem.content)}</span>
 							</span>
 						</div>
 						<div class="flex flex-wrap items-center gap-2 text-xs">

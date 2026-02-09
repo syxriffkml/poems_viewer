@@ -6,7 +6,8 @@
 	import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 	import Modal from '$lib/components/Modal.svelte';
-	import { Heart, Search, User, Calendar, Eye, Sparkles, Tag, Trash2, ArrowUp, ArrowDown } from 'lucide-svelte';
+	import { calculateReadingTime } from '$lib/utils/readingTime';
+	import { Heart, Search, User, Calendar, Eye, Sparkles, Tag, Trash2, ArrowUp, ArrowDown, Clock } from 'lucide-svelte';
 
 	let favorites = [];
 	let loading = true;
@@ -284,6 +285,11 @@
 								<span class="flex items-center gap-1">
 									<Calendar size={14} />
 									{formatDate(favorite.createdAt)}
+								</span>
+								<span>•</span>
+								<span class="flex items-center gap-1">
+									<Clock size={14} />
+									{calculateReadingTime(favorite.poemContent)}
 								</span>
 							</div>
 
