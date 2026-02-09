@@ -279,31 +279,40 @@ KNOWN CONSTRAINTS
     - Sort applied reactively alongside category/sentiment/search filters
     - 3-column filter layout (Category, Sentiment, Sort By)
 
+13. FAVORITES/BOOKMARKING SYSTEM (/favorites)
+    - Heart/bookmark icon on gallery poem cards
+    - Toggle bookmark state (add/remove from favorites)
+    - New Firestore collection: `favorites` with denormalized poem data
+    - Dedicated /favorites page showing bookmarked poems grid
+    - Search bar filtering by title, content, author
+    - Category and sentiment filters
+    - Stats display (Total Bookmarks, AI Generated, Categories)
+    - Remove bookmark functionality with Modal confirmation
+    - Scroll up/down buttons
+    - Header navigation link (Heart icon) when logged in
+    - Icons: Heart, Search, Tag, User, Calendar, Eye, Trash2, Sparkles
+
+14. AI CUSTOMIZATION FOR POEM GENERATION (/create)
+    - Collapsible "Advanced Options" section with ChevronDown/Up icons
+    - Style selector: sonnet, haiku, free_verse, limerick, ballad, romantic, dark, nature
+    - Length selector: short (4-8 lines), medium (12-20 lines), long (24+ lines)
+    - Rhyme scheme selector: AABB, ABAB, ABCB, free
+    - Tone selector: joyful, melancholic, dramatic, peaceful, playful
+    - All options optional with "Default (AI chooses)" fallback
+    - Backend: Dynamic system prompt builder in GroqService
+    - Backend: Adaptive max_tokens (512/1024/1536) based on length
+    - Backend: Parameter validation with nullable enum rules
+    - API timeout increased to 45s for longer poems
+    - Victorian-styled select dropdowns in 2-column grid
+    - Backward compatible (all parameters nullable)
+    - ⚠️ NOTE: Requires manual testing to verify poem quality across different option combinations
+
 POTENTIAL NEXT FEATURES (NOT STARTED)
 -------------------------------------
 
 ### HIGH PRIORITY (High Value + Medium/Low Complexity)
 
-1. **Favorites/Bookmarking System**
-   - Allow users to bookmark poems from gallery
-   - Heart/bookmark icon on poem cards (toggle state)
-   - New collection: `favorites` with userId + poemId pairs
-   - `/favorites` page showing bookmarked poems grid
-   - Remove from favorites functionality
-   - Stats: show favorites count on user profile
-   - **Why**: Enhances engagement, helps users curate collections
-   - **Complexity**: Medium (new Firestore collection, UI updates)
-
-2. **More AI Customization**
-   - Add style dropdown: Romantic, Sonnet, Haiku, Free Verse, Limerick, Ballad
-   - Length selector: Short (4-8 lines), Medium (12-20 lines), Long (24+ lines)
-   - Rhyme scheme options: AABB, ABAB, ABCB, Free (no rhyme)
-   - Tone selector: Joyful, Melancholic, Dramatic, Peaceful, Playful
-   - Update Groq prompt to include these parameters
-   - **Why**: More creative control, better user satisfaction
-   - **Complexity**: Low-Medium (backend prompt modification, frontend form)
-
-3. **Reading Time Estimate**
+1. **Reading Time Estimate**
    - Calculate reading time based on word count (avg 200 words/min)
    - Display on poem cards: "~2 min read"
    - Use Clock icon from Lucide
@@ -312,7 +321,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
 
 ### MEDIUM PRIORITY (Medium Value + Medium Complexity)
 
-4. **Export Poems as PDF/Images**
+2. **Export Poems as PDF/Images**
    - Generate Victorian-styled PDF with formatting preserved
    - Create shareable PNG images with poem + decorative border
    - Download buttons on poem view page: "Download PDF" / "Save as Image"
@@ -321,7 +330,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
    - **Why**: Offline preservation, social media sharing
    - **Complexity**: Medium (new dependencies, rendering logic)
 
-5. **Comments on Public Poems**
+3. **Comments on Public Poems**
    - New collection: `comments` with poemId, userId, text, timestamp
    - Comment section below poem content on view page
    - Reply threading (optional: flat or nested)
@@ -331,7 +340,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
    - **Why**: Community engagement, feedback for authors
    - **Complexity**: Medium-High (new collection, real-time updates)
 
-6. **Like/Appreciation System**
+4. **Like/Appreciation System**
    - Simple like counter on public poems
    - Heart icon button (filled when liked by user)
    - New collection: `likes` with userId + poemId pairs
@@ -340,7 +349,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
    - **Why**: Social validation, discover popular content
    - **Complexity**: Medium (new collection, aggregation logic)
 
-7. **User Collections/Folders**
+5. **User Collections/Folders**
    - Create custom folders: "Love Poems", "Dark Poetry", etc.
    - Organize own poems into folders
    - New collection: `folders` with userId, name, poemIds array
@@ -349,7 +358,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
    - **Why**: Organization for prolific users
    - **Complexity**: Medium-High (new collection, complex UI)
 
-8. **Poem Analytics Dashboard**
+6. **Poem Analytics Dashboard**
    - Track views, shares, likes over time
    - Chart.js integration for visual stats
    - Show on My Poems page: "Top Performing Poem", "Total Reach"
@@ -359,7 +368,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
 
 ### LOWER PRIORITY (High Complexity or Niche Value)
 
-9. **Poem Versioning/History**
+7. **Poem Versioning/History**
    - Save edit history with timestamps
    - New subcollection: `poems/{id}/versions`
    - "View History" page showing timeline
@@ -368,7 +377,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
    - **Why**: Safety net for editing, track evolution
    - **Complexity**: High (complex data model, diff UI)
 
-10. **Collaborative Poems**
+8. **Collaborative Poems**
     - Invite other users to co-author poems
     - Permissions: view/edit/admin
     - Real-time collaborative editing (optional: Firebase Realtime DB)
@@ -376,7 +385,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
     - **Why**: Creative collaboration feature
     - **Complexity**: Very High (real-time sync, permissions)
 
-11. **Poem Contests/Challenges**
+9. **Poem Contests/Challenges**
     - Weekly/monthly themed challenges
     - New collection: `challenges` with theme, deadline, entries
     - Submit poems to challenges
@@ -385,7 +394,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
     - **Why**: Gamification, community building
     - **Complexity**: High (voting system, moderation)
 
-12. **Following System**
+10. **Following System**
     - Follow favorite authors
     - New collection: `follows` with followerId + followingId
     - Feed page showing poems from followed authors
@@ -394,7 +403,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
     - **Why**: Social network features
     - **Complexity**: Medium-High (new relationships, feed logic)
 
-13. **Poem Recommendations**
+11. **Poem Recommendations**
     - AI-powered recommendations based on reading history
     - "You might also like..." section
     - Content-based filtering using categories/sentiment
@@ -402,7 +411,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
     - **Why**: Discovery, increased engagement
     - **Complexity**: High (recommendation algorithm)
 
-14. **Mobile App (PWA)**
+12. **Mobile App (PWA)**
     - Convert to Progressive Web App
     - Add service worker for offline reading
     - Install prompt for home screen
@@ -410,7 +419,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
     - **Why**: Mobile-first experience
     - **Complexity**: Medium (PWA setup, service workers)
 
-15. **Multi-language Support (i18n)**
+13. **Multi-language Support (i18n)**
     - Translate UI to multiple languages
     - Generate poems in different languages via Groq
     - Language selector in header
@@ -418,7 +427,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
     - **Why**: Global reach
     - **Complexity**: Medium-High (translation files, Groq multi-lang)
 
-16. **Audio Recitation**
+14. **Audio Recitation**
     - Text-to-speech for poems
     - Play button with audio controls
     - Voice selection (male/female, accents)
@@ -427,7 +436,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
     - **Why**: Accessibility, different consumption method
     - **Complexity**: Medium (TTS API integration)
 
-17. **Poem Printing Templates**
+15. **Poem Printing Templates**
     - Print-optimized layouts
     - Victorian border designs
     - Greeting card templates
@@ -437,14 +446,14 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
 
 ### QUALITY OF LIFE IMPROVEMENTS
 
-18. **Dark Mode**
+16. **Dark Mode**
     - Toggle in header for dark/light theme
     - Victorian dark palette: charcoal, muted gold, dark parchment
     - Store preference in localStorage
     - **Why**: Eye comfort, modern UX expectation
     - **Complexity**: Low-Medium (CSS variables, theme switcher)
 
-19. **Keyboard Shortcuts**
+17. **Keyboard Shortcuts**
     - Ctrl+K: Focus search
     - Ctrl+N: New poem
     - Esc: Close modals
@@ -452,7 +461,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
     - **Why**: Power user efficiency
     - **Complexity**: Low (event listeners)
 
-20. **Advanced Search**
+18. **Advanced Search**
     - Search by date range
     - Filter by word count
     - Search within specific author's poems
@@ -461,7 +470,7 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
     - **Why**: Better discovery for large collections
     - **Complexity**: Medium (complex filter logic)
 
-21. **Email Notifications**
+19. **Email Notifications**
     - Notify on new comments on user's poems
     - Weekly digest of new poems in followed categories
     - Firebase Functions + SendGrid/Mailgun integration
@@ -469,28 +478,28 @@ POTENTIAL NEXT FEATURES (NOT STARTED)
     - **Why**: Re-engagement, community awareness
     - **Complexity**: High (email service, Firebase Functions)
 
-22. **RSS Feed**
+20. **RSS Feed**
     - Generate RSS feed for each user's public poems
     - Gallery-wide RSS feed
     - Category-specific feeds
     - **Why**: Content syndication, followers
     - **Complexity**: Low-Medium (XML generation endpoint)
 
-23. **Poem Duplication/Templates**
+21. **Poem Duplication/Templates**
     - "Duplicate" button on My Poems page
     - Create poem from existing as template
     - Save formatting presets
     - **Why**: Workflow efficiency, consistent styling
     - **Complexity**: Low (copy functionality)
 
-24. **Bulk Actions**
+22. **Bulk Actions**
     - Select multiple poems in My Poems
     - Bulk delete, bulk make public/private
     - Bulk move to folder
     - **Why**: Management efficiency
     - **Complexity**: Medium (selection state, batch operations)
 
-25. **Poem Import/Export**
+23. **Poem Import/Export**
     - Import poems from .txt/.docx files
     - Export entire collection as ZIP
     - Backup/restore functionality
