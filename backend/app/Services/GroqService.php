@@ -11,6 +11,38 @@ class GroqService
     protected string $apiKey;
     protected string $baseUrl = 'https://api.groq.com/openai/v1';
 
+    protected array $styleInstructions = [
+        'sonnet' => 'Write a 14-line sonnet with traditional structure.',
+        'haiku' => 'Write a haiku with 5-7-5 syllable structure across three lines.',
+        'free_verse' => 'Write in free verse style with no strict meter or rhyme.',
+        'limerick' => 'Write a humorous limerick with AABBA rhyme scheme.',
+        'ballad' => 'Write a narrative ballad with quatrain stanzas.',
+        'romantic' => 'Write in romantic style with lush, emotional language.',
+        'dark' => 'Write with dark, gothic imagery and somber themes.',
+        'nature' => 'Focus on natural imagery and the beauty of the natural world.'
+    ];
+
+    protected array $lengthInstructions = [
+        'short' => 'Keep the poem brief, between 4-8 lines.',
+        'medium' => 'Write a moderate-length poem of 12-20 lines.',
+        'long' => 'Write an extended poem of at least 24 lines with multiple stanzas.'
+    ];
+
+    protected array $rhymeInstructions = [
+        'AABB' => 'Use AABB rhyme scheme (couplets, where consecutive lines rhyme).',
+        'ABAB' => 'Use ABAB rhyme scheme (alternating rhyme pattern).',
+        'ABCB' => 'Use ABCB rhyme scheme (second and fourth lines rhyme).',
+        'free' => 'Do not use rhyme; focus on rhythm and imagery instead.'
+    ];
+
+    protected array $toneInstructions = [
+        'joyful' => 'Maintain a joyful, celebratory tone with uplifting language.',
+        'melancholic' => 'Use a melancholic, wistful tone with introspective themes.',
+        'dramatic' => 'Write with dramatic intensity and strong emotional impact.',
+        'peaceful' => 'Create a peaceful, serene atmosphere with gentle language.',
+        'playful' => 'Use playful, whimsical language with light-hearted themes.'
+    ];
+
     public function __construct()
     {
         $this->apiKey = config('services.groq.api_key');
@@ -21,25 +53,86 @@ class GroqService
     }
 
     /**
-     * Generate a poem based on a user prompt
+     * Build dynamic system prompt based on customization options
      */
-    public function generatePoem(string $prompt): array
-    {
-        try {
-            $response = Http::withoutVerifying()->withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post($this->baseUrl . '/chat/completions', [
-                'model' => 'llama-3.3-70b-versatile',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'You are a skilled poet with expertise in various poetic forms and styles. Generate beautiful, creative poems based on user prompts. IMPORTANT: Your response must be in this exact format:
+    private function buildSystemPrompt(
+        ?string $style,
+        ?string $length,
+        ?string $rhymeScheme,
+        ?string $tone
+    ): string {
+        $basePrompt = 'You are a skilled poet with expertise in various poetic forms and styles. Generate beautiful, creative poems based on user prompts.';
+
+        $instructions = [];
+
+        // Add instructions based on parameters
+        if ($style && isset($this->styleInstructions[$style])) {
+            $instructions[] = $this->styleInstructions[$style];
+        }
+
+        if ($length && isset($this->lengthInstructions[$length])) {
+            $instructions[] = $this->lengthInstructions[$length];
+        }
+
+        if ($rhymeScheme && isset($this->rhymeInstructions[$rhymeScheme])) {
+            $instructions[] = $this->rhymeInstructions[$rhymeScheme];
+        }
+
+        if ($tone && isset($this->toneInstructions[$tone])) {
+            $instructions[] = $this->toneInstructions[$tone];
+        }
+
+        // Combine instructions
+        if (!empty($instructions)) {
+            $basePrompt .= "\n\n" . implode(' ', $instructions);
+        }
+
+        // Add format instruction
+        $basePrompt .= "\n\nIMPORTANT: Your response must be in this exact format:
 TITLE: [A short, evocative title for the poem]
 ---
 [The poem content with proper line breaks and stanzas]
 
-Be creative and evocative in your language. The title should be 2-6 words that capture the essence of the poem.'
+Be creative and evocative in your language. The title should be 2-6 words that capture the essence of the poem.";
+
+        return $basePrompt;
+    }
+
+    /**
+     * Get max tokens based on length selection
+     */
+    private function getMaxTokens(?string $length): int {
+        return match($length) {
+            'short' => 512,
+            'long' => 1536,
+            default => 1024
+        };
+    }
+
+    /**
+     * Generate a poem based on a user prompt
+     */
+    public function generatePoem(
+        string $prompt,
+        ?string $style = null,
+        ?string $length = null,
+        ?string $rhymeScheme = null,
+        ?string $tone = null
+    ): array
+    {
+        try {
+            $systemPrompt = $this->buildSystemPrompt($style, $length, $rhymeScheme, $tone);
+            $maxTokens = $this->getMaxTokens($length);
+
+            $response = Http::withoutVerifying()->withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->timeout(45)->post($this->baseUrl . '/chat/completions', [
+                'model' => 'llama-3.3-70b-versatile',
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => $systemPrompt
                     ],
                     [
                         'role' => 'user',
@@ -47,7 +140,7 @@ Be creative and evocative in your language. The title should be 2-6 words that c
                     ]
                 ],
                 'temperature' => 0.8,
-                'max_tokens' => 1024,
+                'max_tokens' => $maxTokens,
             ]);
 
             if (!$response->successful()) {

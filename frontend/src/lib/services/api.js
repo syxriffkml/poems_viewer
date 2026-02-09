@@ -13,8 +13,15 @@ const apiClient = axios.create({
 
 // AI Service endpoints
 export const aiService = {
-	async generatePoem(prompt) {
-		const response = await apiClient.post('/ai/generate-poem', { prompt });
+	async generatePoem(prompt, options = {}) {
+		const payload = {
+			prompt,
+			...(options.style && { style: options.style }),
+			...(options.length && { length: options.length }),
+			...(options.rhyme_scheme && { rhyme_scheme: options.rhyme_scheme }),
+			...(options.tone && { tone: options.tone })
+		};
+		const response = await apiClient.post('/ai/generate-poem', payload);
 		return response.data;
 	},
 

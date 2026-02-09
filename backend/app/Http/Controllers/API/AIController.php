@@ -22,19 +22,29 @@ class AIController extends Controller
      */
     public function generatePoem(Request $request): JsonResponse
     {
-        $request->validate([
-            'prompt' => 'required|string|min:3|max:500'
+        $validated = $request->validate([
+            'prompt' => 'required|string|min:3|max:500',
+            'style' => 'nullable|string|in:sonnet,haiku,free_verse,limerick,ballad,romantic,dark,nature',
+            'length' => 'nullable|string|in:short,medium,long',
+            'rhyme_scheme' => 'nullable|string|in:AABB,ABAB,ABCB,free',
+            'tone' => 'nullable|string|in:joyful,melancholic,dramatic,peaceful,playful'
         ]);
 
         try {
-            $result = $this->groqService->generatePoem($request->prompt);
+            $result = $this->groqService->generatePoem(
+                $validated['prompt'],
+                $validated['style'] ?? null,
+                $validated['length'] ?? null,
+                $validated['rhyme_scheme'] ?? null,
+                $validated['tone'] ?? null
+            );
 
             return response()->json([
                 'success' => true,
                 'data' => [
                     'title' => $result['title'],
                     'poem' => $result['poem'],
-                    'prompt' => $request->prompt
+                    'prompt' => $validated['prompt']
                 ],
                 'message' => 'Poem generated successfully'
             ]);

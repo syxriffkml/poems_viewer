@@ -7,7 +7,7 @@
 	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 	import Modal from '$lib/components/Modal.svelte';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
-	import { Sparkles, Loader2, Copy, Save, Feather } from 'lucide-svelte';
+	import { Sparkles, Loader2, Copy, Save, Feather, ChevronDown, ChevronUp } from 'lucide-svelte';
 
 	let prompt = '';
 	let generatedPoem = '';
@@ -18,12 +18,56 @@
 	let saving = false;
 	let view = 'form'; // 'form' | 'result'
 
+	// Customization options
+	let style = '';
+	let length = '';
+	let rhymeScheme = '';
+	let tone = '';
+	let showAdvanced = false;
+
 	// Modal state
 	let showModal = false;
 	let modalTitle = '';
 	let modalMessage = '';
 	let modalType = 'info';
 	let modalOnConfirm = null;
+
+	// Option definitions
+	const styleOptions = [
+		{ value: '', label: 'Default (AI chooses)' },
+		{ value: 'sonnet', label: 'Sonnet' },
+		{ value: 'haiku', label: 'Haiku' },
+		{ value: 'free_verse', label: 'Free Verse' },
+		{ value: 'limerick', label: 'Limerick' },
+		{ value: 'ballad', label: 'Ballad' },
+		{ value: 'romantic', label: 'Romantic' },
+		{ value: 'dark', label: 'Dark' },
+		{ value: 'nature', label: 'Nature' }
+	];
+
+	const lengthOptions = [
+		{ value: '', label: 'Default (Medium)' },
+		{ value: 'short', label: 'Short (4-8 lines)' },
+		{ value: 'medium', label: 'Medium (12-20 lines)' },
+		{ value: 'long', label: 'Long (24+ lines)' }
+	];
+
+	const rhymeSchemeOptions = [
+		{ value: '', label: 'Default (AI chooses)' },
+		{ value: 'AABB', label: 'AABB (Couplets)' },
+		{ value: 'ABAB', label: 'ABAB (Alternating)' },
+		{ value: 'ABCB', label: 'ABCB (Simple)' },
+		{ value: 'free', label: 'Free (No rhyme)' }
+	];
+
+	const toneOptions = [
+		{ value: '', label: 'Default (AI chooses)' },
+		{ value: 'joyful', label: 'Joyful' },
+		{ value: 'melancholic', label: 'Melancholic' },
+		{ value: 'dramatic', label: 'Dramatic' },
+		{ value: 'peaceful', label: 'Peaceful' },
+		{ value: 'playful', label: 'Playful' }
+	];
 
 	onMount(() => {
 		// Restore poem from localStorage if returning from login
@@ -59,7 +103,12 @@
 		generatedTitle = '';
 
 		try {
-			const response = await aiService.generatePoem(prompt);
+			const response = await aiService.generatePoem(prompt, {
+				style,
+				length,
+				rhyme_scheme: rhymeScheme,
+				tone
+			});
 			if (response.success) {
 				generatedPoem = response.data.poem;
 				generatedTitle = response.data.title || 'Untitled';
@@ -203,6 +252,107 @@
 						<p class="text-xs text-sepia-600 mt-1">
 							Describe the theme, mood, or subject of your poem
 						</p>
+					</div>
+
+					<!-- Advanced Options Section -->
+					<div class="mb-4">
+						<button
+							type="button"
+							on:click={() => showAdvanced = !showAdvanced}
+							class="flex items-center gap-2 text-gold-700 hover:text-gold-800 transition-colors font-semibold"
+						>
+							{#if showAdvanced}
+								<ChevronUp size={20} />
+							{:else}
+								<ChevronDown size={20} />
+							{/if}
+							<span>Advanced Options</span>
+							<span class="text-sm text-sepia-600 font-normal">(Style, Tone, Length, Rhyme)</span>
+						</button>
+
+						{#if showAdvanced}
+							<div class="mt-4 space-y-4 p-4 bg-parchment-100 border-2 border-sepia-300 rounded-sm">
+								<div class="grid md:grid-cols-2 gap-4">
+									<!-- Style Select -->
+									<div>
+										<label for="style" class="block text-sm font-semibold mb-2 text-ink-800">
+											Poem Style
+										</label>
+										<select
+											id="style"
+											bind:value={style}
+											disabled={loading}
+											class="input-victorian text-sm w-full"
+										>
+											{#each styleOptions as option}
+												<option value={option.value}>{option.label}</option>
+											{/each}
+										</select>
+										<p class="text-xs text-sepia-600 mt-1">Choose the poetic form or theme</p>
+									</div>
+
+									<!-- Tone Select -->
+									<div>
+										<label for="tone" class="block text-sm font-semibold mb-2 text-ink-800">
+											Tone
+										</label>
+										<select
+											id="tone"
+											bind:value={tone}
+											disabled={loading}
+											class="input-victorian text-sm w-full"
+										>
+											{#each toneOptions as option}
+												<option value={option.value}>{option.label}</option>
+											{/each}
+										</select>
+										<p class="text-xs text-sepia-600 mt-1">Set the emotional atmosphere</p>
+									</div>
+								</div>
+
+								<div class="grid md:grid-cols-2 gap-4">
+									<!-- Length Select -->
+									<div>
+										<label for="length" class="block text-sm font-semibold mb-2 text-ink-800">
+											Length
+										</label>
+										<select
+											id="length"
+											bind:value={length}
+											disabled={loading}
+											class="input-victorian text-sm w-full"
+										>
+											{#each lengthOptions as option}
+												<option value={option.value}>{option.label}</option>
+											{/each}
+										</select>
+										<p class="text-xs text-sepia-600 mt-1">Approximate poem length</p>
+									</div>
+
+									<!-- Rhyme Scheme Select -->
+									<div>
+										<label for="rhymeScheme" class="block text-sm font-semibold mb-2 text-ink-800">
+											Rhyme Scheme
+										</label>
+										<select
+											id="rhymeScheme"
+											bind:value={rhymeScheme}
+											disabled={loading}
+											class="input-victorian text-sm w-full"
+										>
+											{#each rhymeSchemeOptions as option}
+												<option value={option.value}>{option.label}</option>
+											{/each}
+										</select>
+										<p class="text-xs text-sepia-600 mt-1">Rhyme pattern (if applicable)</p>
+									</div>
+								</div>
+
+								<div class="text-xs text-sepia-700 italic border-t border-sepia-300 pt-3 mt-2">
+									All options are optional. Leave as "Default" to let the AI choose based on your prompt.
+								</div>
+							</div>
+						{/if}
 					</div>
 
 					<button
